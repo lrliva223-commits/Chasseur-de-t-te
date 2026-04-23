@@ -1,25 +1,30 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const { upload, uploadErrorHandler } = require('./middleware/upload');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/offres', require('./routes/offres'));
 app.use('/api/v1/entreprises', require('./routes/entreprises'));
+
 app.use('/api/v1/candidatures', require('./routes/candidatures'));
+
 app.use('/api/v1/candidats', require('./routes/candidats'));
 app.use('/api/v1/admin', require('./routes/admin'));
 app.use('/api/v1/messages', require('./routes/messages'));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Route de test
 app.get('/api/v1/health', (req, res) => {
@@ -34,7 +39,7 @@ app.use('*', (req, res) => {
 // Gestion des erreurs globales
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Erreur interne du serveur.' });
+  res.status(500).json({ error: err.message || 'Erreur interne du serveur.' });
 });
 
 app.listen(PORT, () => {

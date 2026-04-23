@@ -158,6 +158,28 @@
 
   </main>
 
+  <!-- ════════ MODAL MESSAGE ════════ -->
+  <div id="messageModal" class="modal">
+    <div class="modal-overlay" onclick="closeMessageModal()"></div>
+    <div class="modal-content" style="width: 500px; padding: 32px;">
+      <div class="modal-header" style="margin-bottom: 24px; border:none; padding:0">
+        <h2 style="font-size: 20px; font-weight: 800;">Envoyer un message</h2>
+        <button class="modal-close" onclick="closeMessageModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0">
+        <p class="text-muted mb-4" id="messageDestName" style="font-size: 14px;"></p>
+        <div class="form-group mb-4">
+          <label class="form-label">Votre message</label>
+          <textarea id="messageText" class="form-input" rows="5" placeholder="Écrivez votre message ici..." style="height: auto; padding: 12px;"></textarea>
+        </div>
+        <div class="modal-footer" style="margin-top: 24px; border-top: 1px solid var(--gray-100); padding: 24px 0 0; background:none">
+          <button type="button" class="btn btn-outline" onclick="closeMessageModal()" style="flex:1">Annuler</button>
+          <button type="button" class="btn btn-primary" id="btnSendMessage" onclick="confirmSendMessage()" style="flex:2">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="main.js"></script>
   <script src="dashboard-recruteur.js"></script>
   <script>

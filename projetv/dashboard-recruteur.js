@@ -105,7 +105,16 @@ function renderKanban(candidatures) {
                ondragstart="dragStart(event, '${c.id}')">
             <p class="k-name">${c.prenom} ${c.nom}</p>
             <p class="k-sub">${c.titre_poste || '—'}${c.salaire_min ? ' · ' + c.salaire_min + 'k€' : ''}</p>
-            ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="text-xs" style="color:var(--blue-600)">CV →</a>` : ''}
+            <div class="flex items-center justify-between mt-3">
+              <div class="flex gap-2">
+                ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="tag tag-blue" style="text-decoration:none">CV</a>` : ''}
+                ${c.lm_url ? `<a href="${c.lm_url}" target="_blank" class="tag tag-purple" style="text-decoration:none; background:#f3e8ff; color:#7c3aed">LM</a>` : ''}
+                ${c.demande_url ? `<a href="${c.demande_url}" target="_blank" class="tag tag-amber" style="text-decoration:none">DEM</a>` : ''}
+              </div>
+              <button class="btn-icon" onclick="openMessageModal('${c.candidat_id}', '${c.prenom} ${c.nom}')" title="Envoyer un message">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+              </button>
+            </div>
           </div>
         `).join('') || `<div style="border:2px dashed var(--gray-200);border-radius:6px;padding:16px;text-align:center;color:var(--gray-400);font-size:12px">Déposer ici</div>`}
       </div>
@@ -164,6 +173,52 @@ document.getElementById('newOffreForm').addEventListener('submit', async (e) => 
   } catch (err) { HH.Toast.error(err.message); }
   finally { btn.disabled = false; btn.textContent = 'Publier'; }
 });
+
+// ─── Messagerie ───────────────────────────────────
+let selectedCandidatId = null;
+
+function openMessageModal(candidatId, name) {
+  selectedCandidatId = candidatId;
+  const destName = document.getElementById('messageDestName');
+  if (destName) destName.textContent = `Destinataire : ${name}`;
+  const textInput = document.getElementById('messageText');
+  if (textInput) textInput.value = '';
+  const modal = document.getElementById('messageModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeMessageModal() {
+  const modal = document.getElementById('messageModal');
+  if (modal) modal.style.display = 'none';
+  selectedCandidatId = null;
+}
+
+async function confirmSendMessage() {
+  const textInput = document.getElementById('messageText');
+  const text = textInput ? textInput.value.trim() : '';
+  if (!text) return HH.Toast.error('Veuillez saisir un message.');
+  
+  const btn = document.getElementById('btnSendMessage');
+  btn.disabled = true;
+  btn.textContent = 'Envoi…';
+
+  try {
+    await HH.api('/messages', {
+      method: 'POST',
+      body: JSON.stringify({
+        destinataire_id: selectedCandidatId,
+        contenu: text
+      })
+    });
+    HH.Toast.success('Message envoyé avec succès !');
+    closeMessageModal();
+  } catch (err) {
+    HH.Toast.error(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Envoyer';
+  }
+}
 
 // Init
 loadOffres();

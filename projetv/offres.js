@@ -43,6 +43,14 @@ async function loadOffres(page = 1, filters = {}) {
   const list   = document.getElementById('offresList');
   list.innerHTML = '<p class="empty-state">Chargement…</p>';
 
+  let myApplications = [];
+  if (HH.auth.isLogged()) {
+    try {
+      const appData = await HH.api('/candidatures/mes');
+      myApplications = appData.candidatures || [];
+    } catch (e) { console.error('Erreur chargement mes candidatures:', e); }
+  }
+
   try {
     const data = await HH.api(`/offres?${params}`);
     currentPage = page;
@@ -87,7 +95,9 @@ async function loadOffres(page = 1, filters = {}) {
           <div style="display:flex;gap:12px;align-items:center">
             <span class="text-xs text-muted">Publiée ${HH.formatDate(o.date_publication)}</span>
             ${HH.auth.isLogged()
-              ? `<button class="btn btn-primary btn-sm" onclick="postuler('${o.id}', this)">Postuler maintenant</button>`
+              ? (myApplications.some(app => app.offre_id === o.id)
+                  ? `<button class="btn btn-outline btn-sm" disabled>Déjà postulé ✓</button>`
+                  : `<button class="btn btn-primary btn-sm" onclick="postuler('${o.id}', this)">Postuler maintenant</button>`)
               : `<a href="login.html" class="btn btn-primary btn-sm">Connectez-vous pour postuler</a>`
             }
           </div>
@@ -115,14 +125,153 @@ function renderPagination(total) {
 }
 
 async function postuler(offre_id, btn) {
-  btn.disabled = true; btn.textContent = '…';
+  // Afficher le modal de postulation
+  showApplicationModal(offre_id, btn);
+}
+
+function showApplicationModal(offre_id, btn) {
+  const modalId = 'applicationModal_' + offre_id;
+  let modal = document.getElementById(modalId);
+  
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-overlay" onclick="closeApplicationModal('${offre_id}')"></div>
+      <div class="modal-content" style="width: 600px; max-height: 90vh; overflow-y: auto; padding: 32px;">
+        <div class="modal-header" style="margin-bottom: 24px;">
+          <h2 style="font-size: 24px; font-weight: 800;">Postuler à cette offre</h2>
+          <button class="modal-close" onclick="closeApplicationModal('${offre_id}')">✕</button>
+        </div>
+        <form id="applicationForm_${offre_id}" class="modal-body">
+          <p class="text-muted mb-4" style="font-size: 14px;">Veuillez fournir les documents nécessaires pour votre candidature.</p>
+          
+          <div class="form-group mb-4">
+            <label class="form-label">Curriculum Vitae (CV) *</label>
+            <div class="file-upload-modern">
+              <input type="file" id="cv_${offre_id}" name="cv" accept=".pdf,.doc,.docx" required hidden />
+              <label for="cv_${offre_id}" class="file-drop-area">
+                <div class="icon-circle">
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </div>
+                <div class="file-info">
+                  <span class="file-main-text">Choisir votre CV</span>
+                  <span class="file-sub-text" id="cv_name_${offre_id}">PDF, DOC, DOCX (Max 10Mo)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="form-label">Lettre de Motivation (LM) *</label>
+            <div class="file-upload-modern">
+              <input type="file" id="lm_${offre_id}" name="lm" accept=".pdf,.doc,.docx" required hidden />
+              <label for="lm_${offre_id}" class="file-drop-area">
+                <div class="icon-circle">
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                </div>
+                <div class="file-info">
+                  <span class="file-main-text">Choisir votre LM</span>
+                  <span class="file-sub-text" id="lm_name_${offre_id}">PDF, DOC, DOCX (Max 10Mo)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="form-label">Demande d'emploi / Autre document</label>
+            <div class="file-upload-modern">
+              <input type="file" id="demande_${offre_id}" name="demande" accept=".pdf,.doc,.docx" hidden />
+              <label for="demande_${offre_id}" class="file-drop-area">
+                <div class="icon-circle">
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                </div>
+                <div class="file-info">
+                  <span class="file-main-text">Choisir une demande</span>
+                  <span class="file-sub-text" id="demande_name_${offre_id}">Optionnel (PDF, DOC, DOCX)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="margin-top: 32px; border-top: 1px solid var(--gray-100); padding-top: 24px;">
+            <button type="button" class="btn btn-outline" onclick="closeApplicationModal('${offre_id}')" style="flex:1">Annuler</button>
+            <button type="submit" class="btn btn-primary" style="flex:2">Envoyer ma candidature</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Gestion de l'affichage du nom des fichiers
+    ['cv', 'lm', 'demande'].forEach(field => {
+      const input = document.getElementById(`${field}_${offre_id}`);
+      input.addEventListener('change', function() {
+        const fileName = this.files[0]?.name || (field === 'demande' ? 'Optionnel' : 'Format requis');
+        document.getElementById(`${field}_name_${offre_id}`).textContent = fileName;
+        if (this.files[0]) {
+           this.closest('.file-upload-modern').classList.add('has-file');
+        }
+      });
+    });
+
+    // Gestion de la soumission du formulaire
+    const form = document.getElementById('applicationForm_' + offre_id);
+    form.addEventListener('submit', (e) => submitApplication(e, offre_id, btn));
+  }
+
+  modal.style.display = 'flex';
+}
+
+async function submitApplication(e, offre_id, btn) {
+  e.preventDefault();
+  
+  const cvInput = document.getElementById('cv_' + offre_id);
+  const lmInput = document.getElementById('lm_' + offre_id);
+  const demandeInput = document.getElementById('demande_' + offre_id);
+
+  if (!cvInput.files.length) {
+    HH.Toast.error('Veuillez télécharger un CV');
+    return;
+  }
+  if (!lmInput.files.length) {
+    HH.Toast.error('Veuillez télécharger une lettre de motivation');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('offre_id', offre_id);
+  formData.append('cv', cvInput.files[0]);
+  formData.append('lm', lmInput.files[0]);
+  if (demandeInput.files.length) {
+    formData.append('demande', demandeInput.files[0]);
+  }
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Envoi…';
+
+  // Double check to prevent multiple submissions
+  if (btn.dataset.submitting === 'true') return;
+  btn.dataset.submitting = 'true';
+
   try {
-    await HH.api('/candidatures', { method: 'POST', body: JSON.stringify({ offre_id }) });
-    HH.Toast.success('Candidature envoyée !');
-    btn.textContent = 'Postulé ✓'; btn.classList.remove('btn-primary'); btn.classList.add('btn-outline');
+    await HH.api('/candidatures', { 
+      method: 'POST', 
+      body: formData,
+      headers: {} // Laisser le navigateur définir Content-Type
+    });
+    HH.Toast.success('Candidature envoyée avec succès !');
+    btn.textContent = 'Postulé ✓';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-outline');
+    closeApplicationModal(offre_id);
   } catch (err) {
     HH.Toast.error(err.message);
-    btn.disabled = false; btn.textContent = 'Postuler';
+    btn.disabled = false;
+    btn.textContent = originalText;
+    delete btn.dataset.submitting;
   }
 }
 

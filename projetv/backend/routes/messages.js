@@ -9,32 +9,32 @@ router.use(auth);
 router.get('/conversations', async (req, res) => {
   try {
     const userId = req.user.id;
+    // Query to get all interlocutors and their last message
     const [rows] = await pool.execute(
       `SELECT u.id, u.prenom, u.nom, u.role,
-              lm.contenu AS dernier_message,
-              lm.date_envoi,
-              SUM(CASE WHEN m.destinataire_id = ? AND m.lu = 0 THEN 1 ELSE 0 END) AS non_lu
-       FROM messages m
-       JOIN (
-         SELECT
-           IF(expediteur_id = ?, destinataire_id, expediteur_id) AS interlocuteur_id,
-           MAX(date_envoi) AS last_date
-         FROM messages
-         WHERE expediteur_id = ? OR destinataire_id = ?
-         GROUP BY interlocuteur_id
-       ) latest ON latest.interlocuteur_id = IF(m.expediteur_id = ?, m.destinataire_id, m.expediteur_id)
-       JOIN messages lm ON lm.date_envoi = latest.last_date
-         AND ((lm.expediteur_id = ? AND lm.destinataire_id = latest.interlocuteur_id) OR (lm.expediteur_id = latest.interlocuteur_id AND lm.destinataire_id = ?))
-       JOIN utilisateurs u ON u.id = latest.interlocuteur_id
-       WHERE m.expediteur_id = ? OR m.destinataire_id = ?
-       GROUP BY u.id, u.prenom, u.nom, u.role, lm.contenu, lm.date_envoi
-       ORDER BY lm.date_envoi DESC`,
-      [userId, userId, userId, userId, userId, userId, userId, userId, userId, userId]
+              m.contenu AS dernier_message,
+              m.date_envoi,
+              (SELECT COUNT(*) FROM messages 
+               WHERE destinataire_id = ? AND expediteur_id = u.id AND lu = 0) AS non_lu,
+              (SELECT expediteur_id FROM messages 
+               WHERE (expediteur_id = u.id AND destinataire_id = ?) 
+                  OR (expediteur_id = ? AND destinataire_id = u.id)
+               ORDER BY date_envoi ASC LIMIT 1) = ? AS i_started
+       FROM utilisateurs u
+       JOIN messages m ON m.id = (
+         SELECT id FROM messages
+         WHERE (expediteur_id = u.id AND destinataire_id = ?)
+            OR (expediteur_id = ? AND destinataire_id = u.id)
+         ORDER BY date_envoi DESC
+         LIMIT 1
+       )
+       ORDER BY m.date_envoi DESC`,
+      [userId, userId, userId, userId, userId, userId]
     );
 
     res.json({ conversations: rows });
   } catch (err) {
-    console.error(err);
+    console.error('Erreur conversations:', err);
     res.status(500).json({ error: 'Erreur serveur.' });
   }
 });
@@ -73,9 +73,25 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Destinataire et contenu requis.' });
     }
 
-    const [users] = await pool.execute('SELECT id FROM utilisateurs WHERE id = ?', [destinataire_id]);
+    const [users] = await pool.execute('SELECT id, role FROM utilisateurs WHERE id = ?', [destinataire_id]);
     if (users.length === 0) {
       return res.status(404).json({ error: 'Destinataire introuvable.' });
+    }
+    const destinataire_role = users[0].role;
+
+    // Condition: le candidat ne peut envoyer un message que si l'entreprise a initié la conversation
+    if (req.user.role === 'candidat' && destinataire_role === 'entreprise') {
+      const [firstMsg] = await pool.execute(
+        `SELECT expediteur_id FROM messages 
+         WHERE (expediteur_id = ? AND destinataire_id = ?) 
+            OR (expediteur_id = ? AND destinataire_id = ?)
+         ORDER BY date_envoi ASC LIMIT 1`,
+        [expediteur_id, destinataire_id, destinataire_id, expediteur_id]
+      );
+      
+      if (firstMsg.length === 0 || firstMsg[0].expediteur_id === expediteur_id) {
+        return res.status(403).json({ error: "Seule l'entreprise peut initier la conversation." });
+      }
     }
 
     const id = uuidv4();

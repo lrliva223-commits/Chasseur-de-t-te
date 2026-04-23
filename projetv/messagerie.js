@@ -4,6 +4,8 @@ const me = HH.auth.getUser();
 let selectedConv = null;
 let pollInterval = null;
 
+let conversationsMap = {};
+
 async function loadConversations() {
   try {
     const data  = await HH.api('/messages/conversations');
@@ -14,18 +16,30 @@ async function loadConversations() {
       el.innerHTML = '<p class="empty-state" style="padding:20px;font-size:13px">Aucune conversation</p>';
       return;
     }
-    el.innerHTML = convs.map(c => `
-      <div class="conv-item ${selectedConv?.id === c.id ? 'active' : ''}"
-           data-id="${c.id}" onclick="openConv(${JSON.stringify(c).replace(/"/g,'&quot;')})">
-        <div class="conv-avatar">${(c.prenom?.[0] || '') + (c.nom?.[0] || '')}</div>
-        <div style="min-width:0">
-          <p class="conv-name">${c.prenom} ${c.nom}</p>
-          <p class="conv-last">${c.dernier_message || '—'}</p>
+    
+    conversationsMap = {};
+    el.innerHTML = convs.map(c => {
+      conversationsMap[c.id] = c;
+      return `
+        <div class="conv-item ${selectedConv?.id === c.id ? 'active' : ''}"
+             data-id="${c.id}" onclick="handleConvClick('${c.id}')">
+          <div class="conv-avatar">${(c.prenom?.[0] || '') + (c.nom?.[0] || '')}</div>
+          <div style="min-width:0; flex:1">
+            <p class="conv-name">${c.prenom} ${c.nom}</p>
+            <p class="conv-last">${escapeHtml(c.dernier_message || '—')}</p>
+          </div>
+          ${(c.non_lu > 0) ? `<span class="unread-badge">${c.non_lu}</span>` : ''}
         </div>
-        ${(!c.lu && c.expediteur_id !== me?.id) ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--blue-600);flex-shrink:0;margin-left:auto;margin-top:4px"></span>' : ''}
-      </div>
-    `).join('');
-  } catch {}
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Erreur chargement convs:', err);
+  }
+}
+
+function handleConvClick(id) {
+  const conv = conversationsMap[id];
+  if (conv) openConv(conv);
 }
 
 async function openConv(conv) {

@@ -1,41 +1,12 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
+const { upload, uploadErrorHandler } = require('../middleware/upload');
 
 const router = express.Router();
-const uploadCV = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'uploads', 'cv')),
-    filename: (req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname)}`),
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = ['.pdf', '.doc', '.docx'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowed.includes(ext)) return cb(new Error('Format non autorisé.'));
-    cb(null, true);
-  },
-});
-
-const uploadAvatar = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'uploads', 'avatars')),
-    filename: (req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname)}`),
-  }),
-  limits: { fileSize: 2 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) return cb(new Error('Images uniquement.'));
-    cb(null, true);
-  },
-});
-
-// Create directories
-fs.mkdirSync(path.join(__dirname, '..', 'uploads', 'cv'), { recursive: true });
-fs.mkdirSync(path.join(__dirname, '..', 'uploads', 'avatars'), { recursive: true });
 
 async function getCandidatId(userId) {
   const [rows] = await pool.execute('SELECT id FROM candidats WHERE utilisateur_id = ?', [userId]);
@@ -61,10 +32,6 @@ router.get('/profil', auth, async (req, res) => {
        WHERE c.id = ?`,
       [candidatId]
     );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Profil candidat non trouvé.' });
-    }
 
     res.json({ profil: rows[0] });
   } catch (err) {
@@ -98,23 +65,23 @@ router.put('/profil', auth, async (req, res) => {
   }
 });
 
-router.post('/upload-cv', auth, uploadCV.single('cv'), async (req, res) => {
+router.post('/upload-cv', auth, upload.single('cv'), uploadErrorHandler, async (req, res) => {
   try {
     if (req.user.role !== 'candidat') return res.status(403).json({ error: 'Accès réservé.' });
     if (!req.file) return res.status(400).json({ error: 'Fichier manquant.' });
     const candidatId = await getCandidatId(req.user.id);
-    const cvUrl = `${req.protocol}://${req.get('host')}/uploads/cv/${req.file.filename}`;
+    const cvUrl = `/uploads/cv/${req.file.filename}`;
     await pool.execute('UPDATE candidats SET cv_url = ? WHERE id = ?', [cvUrl, candidatId]);
     res.json({ message: 'CV téléchargé.', cv_url: cvUrl });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/upload-avatar', auth, uploadAvatar.single('avatar'), async (req, res) => {
+router.post('/upload-avatar', auth, upload.single('avatar'), uploadErrorHandler, async (req, res) => {
   try {
     if (req.user.role !== 'candidat') return res.status(403).json({ error: 'Accès réservé.' });
     if (!req.file) return res.status(400).json({ error: 'Fichier manquant.' });
     const candidatId = await getCandidatId(req.user.id);
-    const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/avatars/${req.file.filename}`;
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
     await pool.execute('UPDATE candidats SET avatar_url = ? WHERE id = ?', [avatarUrl, candidatId]);
     res.json({ message: 'Photo mise à jour.', avatar_url: avatarUrl });
   } catch (err) { res.status(500).json({ error: err.message }); }

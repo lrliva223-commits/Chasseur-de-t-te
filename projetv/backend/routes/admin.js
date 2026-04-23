@@ -1,4 +1,5 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
@@ -158,6 +159,69 @@ router.get('/offres', async (req, res) => {
        ORDER BY o.date_publication DESC`
     );
     res.json({ offres });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
+// POST /admin/messages/broadcast - Envoyer une annonce
+router.post('/messages/broadcast', async (req, res) => {
+  try {
+    const { titre, contenu, cible } = req.body;
+    if (!titre || !contenu) {
+      return res.status(400).json({ error: 'Titre et contenu requis.' });
+    }
+
+    const adminId = req.user.id;
+    const { v4: uuidv4 } = require('uuid');
+    const annonceId = uuidv4();
+
+    // 1. Sauvegarder l'annonce dans l'historique
+    await pool.execute(
+      'INSERT INTO admin_annonces (id, titre, contenu, cible) VALUES (?, ?, ?, ?)',
+      [annonceId, titre, contenu, cible || 'all']
+    );
+
+    // 2. Récupérer les utilisateurs cibles (uniquement pour notification/historique)
+    let query = 'SELECT id FROM utilisateurs WHERE id != ? AND statut = "actif"';
+    let params = [adminId];
+
+    if (cible && cible !== 'all') {
+      query += ' AND role = ?';
+      params.push(cible);
+    }
+
+    const [users] = await pool.execute(query, params);
+
+    // 3. Envoyer le message à chaque utilisateur comme notification
+    for (const user of users) {
+      const msgId = uuidv4();
+      await pool.execute(
+        'INSERT INTO messages (id, expediteur_id, destinataire_id, contenu, type_message, date_envoi) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
+        [msgId, adminId, user.id, '[ANNONCE] ' + titre + ': ' + contenu, 'announcement']
+      );
+    }
+
+    res.json({ message: 'Annonce envoyée avec succès.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || 'Erreur serveur.' });
+  }
+});
+
+// DELETE /admin/messages/:id - Supprimer une annonce
+router.delete('/messages/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Supprimer les messages associés
+    await pool.execute('DELETE FROM messages WHERE type_message = ? AND contenu LIKE ?', ['announcement', '%' + id + '%']);
+    
+    // Supprimer l'annonce
+    await pool.execute('DELETE FROM admin_annonces WHERE id = ?', [id]);
+    
+    res.json({ message: 'Annonce supprimée.' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erreur serveur.' });

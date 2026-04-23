@@ -2,7 +2,8 @@
 // HeadHunter — main.js  (JS vanilla partagé)
 // ══════════════════════════════════════════════════
 
-const API = 'http://localhost:5000/api/v1';
+const API_BASE = 'http://localhost:5000';
+const API = `${API_BASE}/api/v1`;
 
 /* ─── Token helpers ─────────────────────────────── */
 const auth = {
@@ -16,11 +17,20 @@ const auth = {
 /* ─── Fetch wrapper avec auth ───────────────────── */
 async function apiFetch(path, options = {}) {
   const token = auth.getToken();
+  const isFormData = options.body && (options.body instanceof FormData || options.body.constructor.name === 'FormData');
+  
+  const headers = isFormData 
+    ? { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers }
+    : { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers };
+  
   const res = await fetch(`${API}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers },
     ...options,
+    headers: { ...headers, ...options.headers }
   });
-  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (res.status === 401) { 
+    console.warn('Session expirée ou invalide (401). Déconnexion automatique.');
+    auth.clear(); window.location.href = 'login.html'; return; 
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Erreur serveur');
   return data;
@@ -105,6 +115,13 @@ function statutBadge(statut) {
   return `<span class="statut statut-${statut}">${{ envoyee:'Envoyée', vue:'Vue', shortlistee:'Shortlistée', entretien:'Entretien', acceptee:'Acceptée', refusee:'Refusée' }[statut] || statut}</span>`;
 }
 
+/* ─── File URL helper ───────────────────────────── */
+function fileUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
 /* ─── Redirect si pas connecté ──────────────────── */
 function requireAuth(role) {
   if (!auth.isLogged()) { window.location.href = 'login.html'; return false; }
@@ -114,5 +131,5 @@ function requireAuth(role) {
 }
 
 /* ─── Export global ─────────────────────────────── */
-window.HH = { api: apiFetch, auth, Toast, validate, showError, clearErrors, formatDate, statutBadge, requireAuth };
+window.HH = { api: apiFetch, auth, Toast, validate, showError, clearErrors, formatDate, statutBadge, requireAuth, API_BASE };
 window.logout = logout;

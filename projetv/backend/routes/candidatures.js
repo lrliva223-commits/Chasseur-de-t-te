@@ -3,6 +3,8 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
+const { upload, uploadErrorHandler } = require('../middleware/upload');
+
 const router = express.Router();
 
 async function getCandidatId(userId) {
@@ -21,16 +23,39 @@ async function getEntrepriseId(userId) {
 }
 
 // POST /candidatures - Postuler à une offre
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.fields([
+  { name: 'cv', maxCount: 1 },
+  { name: 'lm', maxCount: 1 },
+  { name: 'demande', maxCount: 1 }
+]), uploadErrorHandler, async (req, res) => {
+  console.log('Requête POST /candidatures reçue de:', req.user.email, 'rôle:', req.user.role);
   try {
     const { offre_id } = req.body;
     const userId = req.user.id;
 
+    // Vérifier que c'est un candidat
     if (req.user.role !== 'candidat') {
       return res.status(403).json({ error: 'Seuls les candidats peuvent postuler.' });
     }
 
+    if (!offre_id) {
+      return res.status(400).json({ error: 'offre_id est requis.' });
+    }
+
+    // req.files contient les fichiers uploadés par multer
+    const cvFile = req.files['cv'] ? req.files['cv'][0] : null;
+    const lmFile = req.files['lm'] ? req.files['lm'][0] : null;
+    const demandeFile = req.files['demande'] ? req.files['demande'][0] : null;
+
+    if (!cvFile) {
+      return res.status(400).json({ error: 'Un CV en fichier est requis.' });
+    }
+    if (!lmFile) {
+      return res.status(400).json({ error: 'Une lettre de motivation en fichier est requise.' });
+    }
+
     const candidatId = await getCandidatId(userId);
+    console.log('ID Candidat trouvé:', candidatId);
     if (!candidatId) {
       return res.status(404).json({ error: 'Profil candidat non trouvé.' });
     }
@@ -49,15 +74,26 @@ router.post('/', auth, async (req, res) => {
     }
 
     const candidatureId = uuidv4();
+    const cv_url = `/uploads/cv/${cvFile.filename}`;
+    const lm_url = `/uploads/lm/${lmFile.filename}`;
+    const demande_url = demandeFile ? `/uploads/demande/${demandeFile.filename}` : null;
+    
     await pool.execute(
-      'INSERT INTO candidatures (id, candidat_id, offre_id, statut) VALUES (?, ?, ?, ?)',
-      [candidatureId, candidatId, offre_id, 'envoyee']
+      `INSERT INTO candidatures (id, candidat_id, offre_id, cv_url, lm_url, demande_url, statut) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [candidatureId, candidatId, offre_id, cv_url, lm_url, demande_url, 'envoyee']
     );
 
-    res.json({ message: 'Candidature envoyée avec succès.' });
+    res.json({ 
+      message: 'Candidature envoyée avec succès.',
+      candidature_id: candidatureId,
+      cv_url,
+      lm_url,
+      demande_url
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ error: err.message || 'Erreur serveur.' });
   }
 });
 
@@ -115,9 +151,9 @@ router.get('/offre/:id', auth, async (req, res) => {
     }
 
     const [candidatures] = await pool.execute(
-      `SELECT c.id, c.statut, c.date_envoi, c.lettre_motivation,
+      `SELECT c.id, c.statut, c.date_envoi, c.cv_url, c.lm_url, c.demande_url,
               u.id as candidat_id, u.prenom, u.nom, u.email,
-              ca.titre_poste, ca.salaire_min, ca.cv_url
+              ca.titre_poste, ca.salaire_min
        FROM candidatures c
        JOIN candidats ca ON c.candidat_id = ca.id
        JOIN utilisateurs u ON ca.utilisateur_id = u.id
@@ -186,9 +222,9 @@ router.get('/entreprise', auth, async (req, res) => {
     }
 
     const [candidatures] = await pool.execute(
-      `SELECT c.id, c.statut, c.date_envoi, c.lettre_motivation,
+      `SELECT c.id, c.statut, c.date_envoi, c.cv_url, c.lm_url, c.demande_url,
               u.id as candidat_id, u.prenom, u.nom, u.email,
-              ca.titre_poste, ca.salaire_min, ca.cv_url,
+              ca.titre_poste, ca.salaire_min,
               o.id as offre_id, o.titre as offre_titre
        FROM candidatures c
        JOIN candidats ca ON c.candidat_id = ca.id
