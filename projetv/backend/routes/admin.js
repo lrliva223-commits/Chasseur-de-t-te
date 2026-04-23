@@ -138,4 +138,30 @@ router.delete('/offres/:id', async (req, res) => {
   }
 });
 
+// GET /admin/offres - Liste de toutes les offres
+router.get('/offres', async (req, res) => {
+  try {
+    const [offres] = await pool.execute(
+      `SELECT
+         o.id,
+         o.titre,
+         o.localisation,
+         o.type_contrat,
+         o.statut,
+         o.date_publication,
+         e.nom as entreprise_nom,
+         COUNT(c.id) as nb_candidatures
+       FROM offres_emploi o
+       LEFT JOIN entreprises e ON o.entreprise_id = e.id
+       LEFT JOIN candidatures c ON c.offre_id = o.id
+       GROUP BY o.id
+       ORDER BY o.date_publication DESC`
+    );
+    res.json({ offres });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
 module.exports = router;

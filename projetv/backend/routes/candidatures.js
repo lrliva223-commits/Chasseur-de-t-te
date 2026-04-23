@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const auth = require('../middleware/auth');

@@ -31,7 +31,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [entreprises] = await pool.execute(
-      'SELECT id, nom, secteur, logo_url, description, site_web FROM entreprises WHERE id = ? AND verifie = 1',
+      'SELECT id, nom, secteur, adresse, taille, logo_url FROM entreprises WHERE id = ?',
       [id]
     );
     

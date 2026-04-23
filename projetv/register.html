@@ -1,228 +1,175 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inscription — chasseur de tête</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription — Chasseur de tête</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 </head>
-<body>
-<div class="form-page">
-  <div class="form-card" style="max-width:480px">
-    <div class="form-logo"><a href="index.html" class="logo"><b><i>Chasseur de tête</i></b></a></div>
-    <h1 class="form-title">Créer un compte</h1>
-    <p class="form-sub">Choisissez votre profil pour commencer</p>
+<body class="auth-body">
+
+  <div class="auth-card glass" style="max-width: 500px;">
+    <div class="auth-header">
+      <a href="index.html" class="logo"><i>CHASSEUR DE TÊTE</i></a>
+      <h1>Créer un compte</h1>
+      <p id="sub-msg">Choisissez votre profil pour commencer</p>
+    </div>
 
     <!-- Sélection rôle -->
     <div class="role-grid" id="roleGrid">
-      <button type="button" class="role-btn active" data-role="candidat">
-        <span class="role-label">CANDIDAT</span>
-        <span class="role-desc">Accédez aux offres et postulez en un clic</span>
-      </button>
-      <button type="button" class="role-btn" data-role="entreprise">
-        <span class="role-label">ENTREPRISE</span>
-        <span class="role-desc">Publiez des offres et recrutez les meilleurs candidats</span>
-      </button>
-      <button type="button" class="role-btn" data-role="admin">
-        <span class="role-label">ADMIN</span>
-        <span class="role-desc">Administration et gestion de la plateforme</span>
-      </button>
+      <div class="role-btn active" data-role="candidat">
+        <div class="role-label">CANDIDAT</div>
+        <div class="role-desc">Postulez aux meilleures offres</div>
+      </div>
+      <div class="role-btn" data-role="entreprise">
+        <div class="role-label">ENTREPRISE</div>
+        <div class="role-desc">Recrutez des talents d'élite</div>
+      </div>
+      <div class="role-btn" data-role="admin">
+        <div class="role-label">ADMIN</div>
+        <div class="role-desc">Gestion de la plateforme</div>
+      </div>
     </div>
 
     <form id="registerForm" style="display:none;">
-      <div class="grid-2" id="nameFields" style="gap:12px">
-        <div class="form-group">
-          <label class="form-label" for="prenom">Prénom</label>
-          <input class="form-input" id="prenom" type="text" placeholder="Marie" autocomplete="given-name" />
+      <div class="grid-2" id="nameFields" style="gap:16px">
+        <div class="form-floating">
+          <label class="form-label">Prénom</label>
+          <input class="form-input" id="prenom" type="text" placeholder="Marie" />
         </div>
-        <div class="form-group">
-          <label class="form-label" for="nom">Nom</label>
-          <input class="form-input" id="nom" type="text" placeholder="RAKOTO" autocomplete="family-name" />
+        <div class="form-floating">
+          <label class="form-label">Nom</label>
+          <input class="form-input" id="nom" type="text" placeholder="RAKOTO" />
         </div>
       </div>
-      <div class="form-group" id="companyField" style="display:none;">
-        <label class="form-label" for="company">Nom de l'entreprise</label>
+
+      <div class="form-floating" id="companyField" style="display:none;">
+        <label class="form-label">Nom de l'entreprise</label>
         <input class="form-input" id="company" type="text" placeholder="Votre société" />
       </div>
-      <div class="grid-2" id="enterpriseFields" style="display:none; gap:12px">
-        <div class="form-group">
-          <label class="form-label" for="nif">NIF</label>
+
+      <div class="grid-2" id="enterpriseFields" style="display:none; gap:16px">
+        <div class="form-floating">
+          <label class="form-label">NIF</label>
           <input class="form-input" id="nif" type="text" placeholder="NIF" />
         </div>
-        <div class="form-group">
-          <label class="form-label" for="stat">STAT</label>
+        <div class="form-floating">
+          <label class="form-label">STAT</label>
           <input class="form-input" id="stat" type="text" placeholder="STAT" />
         </div>
-        <div class="form-group" style="flex:1 1 100%;">
-          <label class="form-label" for="logoUrl">Logo de l'entreprise (URL)</label>
-          <input class="form-input" id="logoUrl" type="url" placeholder="https://..." />
+      </div>
+
+      <div class="form-floating">
+        <label class="form-label">Email professionnel</label>
+        <input class="form-input" id="email" type="email" placeholder="nom@domaine.com" required />
+      </div>
+
+      <div class="grid-2" style="gap:16px">
+        <div class="form-floating">
+          <label class="form-label">Mot de passe</label>
+          <input class="form-input" id="password" type="password" placeholder="••••••••" required />
+        </div>
+        <div class="form-floating">
+          <label class="form-label">Confirmer</label>
+          <input class="form-input" id="confirm" type="password" placeholder="••••••••" required />
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="email">Email</label>
-        <input class="form-input" id="email" type="email" placeholder="vous@exemple.com" autocomplete="email" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="password">Mot de passe</label>
-        <div class="password-input-container">
-          <input class="form-input with-password-toggle" id="password" type="password" placeholder="Minimum 8 caractères" />
-          <button type="button" class="password-toggle" data-target="password">
-            <span class="eye-icon">👁️</span>
-          </button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="confirm">Confirmer le mot de passe</label>
-        <input class="form-input" id="confirm" type="password" placeholder="••••••••" />
-      </div>
-      <button type="submit" class="btn btn-primary btn-lg form-btn" id="submitBtn">Créer mon compte</button>
+
+      <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn" style="width:100%; margin-top: 10px;">
+        Finaliser l'inscription
+      </button>
     </form>
 
-    <p class="form-link mt-4">Déjà un compte ? <a href="login.html">Se connecter</a></p>
+    <div class="auth-footer">
+      <p>Déjà un compte ? <a href="login.html">Se connecter</a></p>
+    </div>
   </div>
-</div>
 
-<script src="main.js"></script>
-<script>
-  let selectedRole = 'candidat';
-  const validRoles = ['candidat', 'entreprise', 'admin'];
+  <script src="main.js"></script>
+  <script>
+    let selectedRole = 'candidat';
+    const validRoles = ['candidat', 'entreprise', 'admin'];
+    const urlRole = new URLSearchParams(window.location.search).get('role');
+    if (urlRole && validRoles.includes(urlRole)) { selectedRole = urlRole; }
 
-  // Pré-sélection via URL param
-  const urlRole = new URLSearchParams(window.location.search).get('role');
-  if (urlRole && validRoles.includes(urlRole)) {
-    selectedRole = urlRole;
-    document.querySelectorAll('.role-btn').forEach(b => { b.classList.toggle('active', b.dataset.role === urlRole); });
-  }
+    const registerForm = document.getElementById('registerForm');
+    const roleGrid = document.getElementById('roleGrid');
+    const nameFields = document.getElementById('nameFields');
+    const companyField = document.getElementById('companyField');
+    const enterpriseFields = document.getElementById('enterpriseFields');
+    const subMsg = document.getElementById('sub-msg');
 
-  const registerForm = document.getElementById('registerForm');
-  const roleGrid = document.getElementById('roleGrid');
-  const nameFields = document.getElementById('nameFields');
-  const companyField = document.getElementById('companyField');
-  const enterpriseFields = document.getElementById('enterpriseFields');
-  const confirmGroup = document.querySelector('label[for="confirm"]').closest('.form-group');
-
-  function showForm() {
-    registerForm.style.display = 'block';
-    document.querySelector('.form-title').textContent = 'Créer un compte ' + (selectedRole === 'admin' ? '(Admin)' : selectedRole === 'entreprise' ? '(Entreprise)' : '(Candidat)');
-
-    if (selectedRole === 'entreprise') {
-      nameFields.style.display = 'none';
-      companyField.style.display = 'block';
-      enterpriseFields.style.display = 'grid';
-      confirmGroup.style.display = 'block';
-      document.querySelector('.form-sub').textContent = 'Entreprise : nom, NIF, STAT, email et mot de passe';
-    } else if (selectedRole === 'admin') {
-      nameFields.style.display = 'none';
-      companyField.style.display = 'none';
-      enterpriseFields.style.display = 'none';
-      confirmGroup.style.display = 'block';
-      document.querySelector('.form-sub').textContent = 'Administrateur : email et mot de passe uniquement';
-    } else {
-      nameFields.style.display = 'grid';
-      companyField.style.display = 'none';
-      enterpriseFields.style.display = 'none';
-      confirmGroup.style.display = 'block';
-      document.querySelector('.form-sub').textContent = 'Complétez les informations pour créer votre compte';
+    function showForm() {
+      registerForm.style.display = 'block';
+      if (selectedRole === 'entreprise') {
+        nameFields.style.display = 'none';
+        companyField.style.display = 'block';
+        enterpriseFields.style.display = 'grid';
+        subMsg.textContent = 'Inscrivez votre entreprise';
+      } else if (selectedRole === 'admin') {
+        nameFields.style.display = 'none';
+        companyField.style.display = 'none';
+        enterpriseFields.style.display = 'none';
+        subMsg.textContent = 'Identifiants administrateur';
+      } else {
+        nameFields.style.display = 'grid';
+        companyField.style.display = 'none';
+        enterpriseFields.style.display = 'none';
+        subMsg.textContent = 'Complétez vos informations personnelles';
+      }
     }
-  }
 
-  roleGrid.addEventListener('click', (e) => {
-    const btn = e.target.closest('.role-btn');
-    if (!btn) return;
-    selectedRole = btn.dataset.role;
-    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    roleGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.role-btn');
+      if (!btn) return;
+      selectedRole = btn.dataset.role;
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showForm();
+    });
+
+    // Default show
+    document.querySelectorAll('.role-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.role === selectedRole);
+    });
     showForm();
-  });
 
-  if (urlRole && validRoles.includes(urlRole)) {
-    selectedRole = urlRole;
-    document.querySelectorAll('.role-btn').forEach(b => { b.classList.toggle('active', b.dataset.role === urlRole); });
-  }
-  showForm();
-
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    HH.clearErrors();
-    const prenom      = document.getElementById('prenom').value;
-    const nom         = document.getElementById('nom').value;
-    const company     = document.getElementById('company').value;
-    const nif         = document.getElementById('nif').value;
-    const stat        = document.getElementById('stat').value;
-    const logoUrl     = document.getElementById('logoUrl').value;
-    const email       = document.getElementById('email').value;
-    const password    = document.getElementById('password').value;
-    const confirm     = document.getElementById('confirm').value;
-    let valid = true;
-
-    if (selectedRole === 'entreprise') {
-      if (HH.validate.required(company)) { HH.showError('company', 'Requis.'); valid = false; }
-      if (HH.validate.required(nif))     { HH.showError('nif', 'Requis.'); valid = false; }
-      if (HH.validate.required(stat))    { HH.showError('stat', 'Requis.'); valid = false; }
-    }
-
-    if (selectedRole !== 'entreprise' && selectedRole !== 'admin') {
-      if (HH.validate.required(prenom)) { HH.showError('prenom', 'Requis.'); valid = false; }
-      if (HH.validate.required(nom))    { HH.showError('nom', 'Requis.');    valid = false; }
-    }
-
-    const emailErr = HH.validate.email(email);
-    if (emailErr)  { HH.showError('email', emailErr); valid = false; }
-    const pwErr = HH.validate.minLen(password, 8);
-    if (pwErr)     { HH.showError('password', pwErr); valid = false; }
-
-    const matchErr = HH.validate.match(password, confirm);
-    if (matchErr)  { HH.showError('confirm', matchErr); valid = false; }
-
-    if (!valid) return;
-
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.textContent = 'Création du compte…';
-
-    try {
-      const body = { email, mot_de_passe: password, role: selectedRole };
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      HH.clearErrors();
+      const body = {
+        email: document.getElementById('email').value,
+        mot_de_passe: document.getElementById('password').value,
+        role: selectedRole
+      };
+      
+      const confirm = document.getElementById('confirm').value;
+      if (body.mot_de_passe !== confirm) { HH.Toast.error('Les mots de passe ne correspondent pas.'); return; }
 
       if (selectedRole === 'entreprise') {
-        body.nom_entreprise = company;
-        body.nif = nif;
-        body.stat = stat;
-        body.logo_url = logoUrl;
+        body.nom_entreprise = document.getElementById('company').value;
+        body.nif = document.getElementById('nif').value;
+        body.stat = document.getElementById('stat').value;
       } else if (selectedRole !== 'admin') {
-        body.prenom = prenom;
-        body.nom = nom;
+        body.prenom = document.getElementById('prenom').value;
+        body.nom = document.getElementById('nom').value;
       }
 
-      const data = await HH.api('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-      HH.auth.setSession(data);
-      HH.Toast.success('Compte créé avec succès !');
-      const map = { candidat: 'dashboard-candidat.html', entreprise: 'dashboard-entreprise.html', admin: 'dashboard-admin.html' };
-      setTimeout(() => window.location.href = map[data.user.role] || 'index.html', 600);
-    } catch (err) {
-      HH.Toast.error(err.message);
-      btn.disabled = false; btn.textContent = 'Créer mon compte';
-    }
-  });
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'Création…';
 
-  // Password toggle functionality
-  document.querySelectorAll('.password-toggle').forEach(button => {
-    button.addEventListener('click', function() {
-      const targetId = this.getAttribute('data-target');
-      const input = document.getElementById(targetId);
-      const icon = this.querySelector('.eye-icon');
-
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.textContent = 'Cacher'; // Eye closed
-        this.setAttribute('aria-label', 'Masquer le mot de passe');
-      } else {
-        input.type = 'password';
-        icon.textContent = 'Afficher'; // Eye open
-        this.setAttribute('aria-label', 'Afficher le mot de passe');
+      try {
+        const data = await HH.api('/auth/register', { method: 'POST', body: JSON.stringify(body) });
+        HH.auth.setSession(data);
+        HH.Toast.success('Bienvenue chez HeadHunter !');
+        const map = { candidat: 'dashboard-candidat.html', entreprise: 'dashboard-entreprise.html', admin: 'dashboard-admin.html' };
+        setTimeout(() => window.location.href = map[data.user.role] || 'index.html', 800);
+      } catch (err) {
+        HH.Toast.error(err.message);
+        btn.disabled = false; btn.textContent = 'Finaliser l\'inscription';
       }
     });
-  });
-</script>
+  </script>
 </body>
 </html>

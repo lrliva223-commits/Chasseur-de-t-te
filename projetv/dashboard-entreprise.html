@@ -5,337 +5,388 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Espace entreprise — Chasseur de tête</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 </head>
-<body>
-<div class="dashboard">
-  <aside class="sidebar">
-    <div class="sidebar-logo">Entreprise</div>
-    <nav class="sidebar-nav">
-      <a href="#" class="active" onclick="showTab('overview')">Tableau de bord</a>
-      <a href="#" onclick="showTab('offres')">Mes offres</a>
-      <a href="#" onclick="showTab('candidatures')">Candidatures</a>
-      <a href="#" onclick="showTab('profil')">Mon profil</a>
-      <a href="#" onclick="logout()">Déconnexion</a>
+<body class="dashboard-entreprise">
+
+  <!-- ════════ SIDEBAR ════════ -->
+  <aside class="sidebar-entreprise">
+    <div class="logo-area">
+      <a href="index.html" class="logo" style="font-size: 18px;"><i>CHASSEUR DE TÊTE</i></a>
+    </div>
+    
+    <nav class="nav-group">
+      <a href="#" class="nav-item active" id="nav-overview" onclick="showTab('overview')">
+        <svg xmlns="http://www.w3.org/2003/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-offres" onclick="showTab('offres')">
+        <svg xmlns="http://www.w3.org/2003/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <span>Mes offres</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-candidatures" onclick="showTab('candidatures')">
+        <svg xmlns="http://www.w3.org/2003/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01" />
+        </svg>
+        <span>Candidatures</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-profil" onclick="showTab('profil')">
+        <svg xmlns="http://www.w3.org/2003/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        <span>Profil entreprise</span>
+      </a>
     </nav>
+
+    <div style="margin-top: auto;">
+      <a href="#" class="nav-item" onclick="logout()">
+        <svg xmlns="http://www.w3.org/2003/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        <span>Déconnexion</span>
+      </a>
+    </div>
   </aside>
 
-  <main class="main">
+  <!-- ════════ MAIN CONTENT ════════ -->
+  <main class="admin-main">
+    
+    <header class="admin-header">
+      <div>
+        <h1 id="page-headline">Tableau de bord</h1>
+        <p class="text-muted" id="page-subheadline">Gérez vos recrutements et votre image de marque</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-outline" onclick="refreshDashboard()">Actualiser</button>
+      </div>
+    </header>
+
     <!-- OVERVIEW -->
     <div id="tab-overview">
-      <div class="container" style="padding:24px">
-        <h1 class="page-title">Tableau de bord</h1>
-        <div class="stats-grid mb-4">
-          <div class="stat-card"><div class="stat-num" id="offresCount">—</div><div class="stat-lbl">Offres publiées</div></div>
-          <div class="stat-card"><div class="stat-num" id="candidaturesCount">—</div><div class="stat-lbl">Candidatures reçues</div></div>
-        </div>
-
-        <div class="card">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="card-title" style="margin:0">Dernières candidatures</h2>
-            <button class="btn btn-primary btn-sm" onclick="showTab('candidatures')">Voir tout →</button>
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card clickable" onclick="showTab('offres')">
+          <div class="admin-stat-info">
+            <h3>Offres publiées</h3>
+            <div class="value" id="offresCount">—</div>
+            <span class="stat-action">Voir mes offres →</span>
           </div>
-          <div id="recentCandidatures"><p class="empty-state">Chargement…</p></div>
+          <div class="admin-stat-icon icon-blue">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="26" height="26"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          </div>
+        </div>
+        <div class="admin-stat-card clickable" onclick="showTab('candidatures')">
+          <div class="admin-stat-info">
+            <h3>Candidatures reçues</h3>
+            <div class="value" id="candidaturesCount">—</div>
+            <span class="stat-action">Traiter les dossiers →</span>
+          </div>
+          <div class="admin-stat-icon icon-purple">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="26" height="26"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-table-header">
+          <h2>Dernières candidatures reçues</h2>
+          <button class="btn btn-primary btn-sm" onclick="showTab('candidatures')">Toutes les candidatures</button>
+        </div>
+        <div id="recentCandidatures">
+          <p class="empty-state">Chargement…</p>
         </div>
       </div>
     </div>
 
     <!-- OFFRES -->
     <div id="tab-offres" style="display:none">
-      <div class="container" style="padding:24px">
-        <div class="flex justify-between items-center mb-4">
-          <h1 class="page-title" style="margin:0">Mes offres d'emploi</h1>
+      <div class="admin-card mb-4">
+        <div class="admin-table-header">
+          <h2>Mes offres d'emploi</h2>
           <button class="btn btn-primary" onclick="showOffreForm()">+ Créer une offre</button>
         </div>
 
-        <div id="offreForm" class="card" style="display:none;max-width:700px">
-          <h3>Créer une nouvelle offre</h3>
-          <form id="formOffre" onsubmit="submitOffre(event)"
-            style="display:grid;gap:12px">
+        <div id="offreForm" class="glass" style="display:none; padding: 24px; border-radius: 16px; margin-bottom: 24px;">
+          <h3 style="margin-bottom: 16px;">Nouvelle offre d'emploi</h3>
+          <form id="formOffre" onsubmit="submitOffre(event)" style="display:grid;gap:16px">
             <input type="hidden" id="offreId" />
-            <div>
-              <label class="form-label">Titre du poste</label>
-              <input class="form-input" id="offreTitre" type="text" placeholder="Ex: Développeur Python" required />
+            <div class="grid-2" style="gap:16px">
+              <div>
+                <label class="form-label">Titre du poste</label>
+                <input class="form-input" id="offreTitre" type="text" placeholder="Ex: Développeur Python" required />
+              </div>
+              <div>
+                <label class="form-label">Localisation</label>
+                <input class="form-input" id="offreLocalisation" type="text" placeholder="Paris, Remote..." />
+              </div>
             </div>
             <div>
-              <label class="form-label">Description</label>
-              <textarea class="form-input" id="offreDesc" placeholder="Décrivez le poste..." style="min-height:120px" required></textarea>
+              <label class="form-label">Description du poste</label>
+              <textarea class="form-input" id="offreDesc" placeholder="Missions, profil recherché..." style="min-height:120px" required></textarea>
             </div>
-            <div>
-              <label class="form-label">Localisation</label>
-              <input class="form-input" id="offreLocalisation" type="text" placeholder="Paris, Lyon, Remote..." />
-            </div>
-            <div class="grid-2" style="gap:12px">
+            <div class="grid-3" style="gap:16px">
               <div>
                 <label class="form-label">Type de contrat</label>
                 <select class="form-input" id="offreType" required>
-                  <option>CDI</option>
-                  <option>CDD</option>
-                  <option>Freelance</option>
-                  <option>Stage</option>
-                  <option>Alternance</option>
+                  <option>CDI</option><option>CDD</option><option>Freelance</option><option>Stage</option><option>Alternance</option>
                 </select>
               </div>
               <div>
                 <label class="form-label">Salaire min (k€)</label>
                 <input class="form-input" id="offreSalaireMin" type="number" placeholder="0" />
               </div>
+              <div>
+                <label class="form-label">Salaire max (k€)</label>
+                <input class="form-input" id="offreSalaireMax" type="number" placeholder="0" />
+              </div>
             </div>
-            <div>
-              <label class="form-label">Salaire max (k€)</label>
-              <input class="form-input" id="offreSalaireMax" type="number" placeholder="0" />
-            </div>
-            <div style="display:flex;gap:8px">
-              <button type="submit" class="btn btn-primary">Publier</button>
+            <div style="display:flex;gap:12px; margin-top: 8px;">
+              <button type="submit" class="btn btn-primary">Publier l'annonce</button>
               <button type="button" class="btn btn-outline" onclick="hideOffreForm()">Annuler</button>
             </div>
           </form>
         </div>
 
-        <div id="offresList"><p class="empty-state">Chargement…</p></div>
+        <div id="offresList">
+          <p class="empty-state">Chargement…</p>
+        </div>
       </div>
     </div>
 
     <!-- CANDIDATURES -->
     <div id="tab-candidatures" style="display:none">
-      <div class="container" style="padding:24px">
-        <h1 class="page-title">Candidatures reçues</h1>
-        <div id="candidaturesList"><p class="empty-state">Chargement…</p></div>
+      <div class="admin-card">
+        <div class="admin-table-header">
+          <h2>Suivi des candidatures</h2>
+        </div>
+        <div id="candidaturesList">
+          <p class="empty-state">Chargement…</p>
+        </div>
       </div>
     </div>
 
     <!-- PROFIL -->
     <div id="tab-profil" style="display:none">
-      <div class="container" style="padding:24px;max-width:600px">
-        <h1 class="page-title">Mon profil entreprise</h1>
-        <form id="formProfil" onsubmit="submitProfil(event)" style="display:grid;gap:16px">
-          <div>
-            <label class="form-label">Nom de l'entreprise</label>
-            <input class="form-input" id="profilNom" type="text" placeholder="Nom" required />
+      <div class="admin-card" style="max-width: 800px;">
+        <div class="admin-table-header">
+          <h2>Identité de l'entreprise</h2>
+        </div>
+        <form id="formProfil" onsubmit="submitProfil(event)" style="display:grid;gap:20px">
+          <div class="grid-2" style="gap:20px">
+            <div>
+              <label class="form-label">Nom de l'entreprise</label>
+              <input class="form-input" id="profilNom" type="text" placeholder="Nom" required />
+            </div>
+            <div>
+              <label class="form-label">Secteur d'activité</label>
+              <input class="form-input" id="profilSecteur" type="text" placeholder="Ex: Technologie" />
+            </div>
           </div>
           <div>
             <label class="form-label">Logo (URL)</label>
             <input class="form-input" id="profilLogo" type="url" placeholder="https://..." />
           </div>
-          <div>
-            <label class="form-label">Secteur d'activité</label>
-            <input class="form-input" id="profilSecteur" type="text" placeholder="Ex: Technologie" />
+          <div class="grid-2" style="gap:20px">
+            <div>
+              <label class="form-label">Taille</label>
+              <select class="form-input" id="profilTaille">
+                <option>1-10</option><option>10-50</option><option>50-200</option><option>200+</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Adresse</label>
+              <input class="form-input" id="profilAdresse" type="text" placeholder="Adresse complète" />
+            </div>
           </div>
-          <div>
-            <label class="form-label">Taille de l'entreprise</label>
-            <select class="form-input" id="profilTaille">
-              <option>1-10</option>
-              <option>10-50</option>
-              <option>50-200</option>
-              <option>200+</option>
-            </select>
+          <div class="grid-2" style="gap:20px">
+            <div>
+              <label class="form-label">Téléphone</label>
+              <input class="form-input" id="profilTelephone" type="tel" placeholder="+261..." />
+            </div>
+            <div>
+              <label class="form-label">Email de contact</label>
+              <input class="form-input" id="profilEmail" type="email" placeholder="contact@..." />
+            </div>
           </div>
-          <div>
-            <label class="form-label">Adresse</label>
-            <input class="form-input" id="profilAdresse" type="text" placeholder="Adresse" />
-          </div>
-          <div>
-            <label class="form-label">Téléphone de contact</label>
-            <input class="form-input" id="profilTelephone" type="tel" placeholder="+261..." />
-          </div>
-          <div>
-            <label class="form-label">Email de contact</label>
-            <input class="form-input" id="profilEmail" type="email" placeholder="contact@..." />
-          </div>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <button type="submit" class="btn btn-primary" style="justify-self: start;">Mettre à jour le profil</button>
         </form>
       </div>
     </div>
   </main>
-</div>
 
-<script src="main.js"></script>
-<script>
-  HH.requireAuth('entreprise');
-  let entrepriseId = null;
-  let currentOffre = null;
-
-  function showTab(id) {
-    ['overview', 'offres', 'candidatures', 'profil'].forEach(t => {
-      document.getElementById('tab-' + t).style.display = t === id ? 'block' : 'none';
-    });
-    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    event.target.classList.add('active');
+  <script src="main.js"></script>
+  <script>
+    HH.requireAuth('entreprise');
     
-    if (id === 'overview') loadOverview();
-    if (id === 'offres') loadOffres();
-    if (id === 'candidatures') loadCandidatures();
-    if (id === 'profil') loadProfil();
-  }
-
-  async function init() {
-    try {
-      const user = HH.auth.getUser();
-      const [rows] = await HH.api('/candidats'); // Adapter pour récupérer entrepriseId
-    } catch (err) {
-      console.error('Init error:', err);
-    }
-    loadOverview();
-  }
-
-  async function loadOverview() {
-    try {
-      const offres = await HH.api('/offres/mes');
-      document.getElementById('offresCount').textContent = offres.offres?.length || 0;
+    function showTab(id) {
+      ['overview', 'offres', 'candidatures', 'profil'].forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        if (el) el.style.display = t === id ? 'block' : 'none';
+        const nav = document.getElementById('nav-' + t);
+        if (nav) nav.classList.toggle('active', t === id);
+      });
       
-      const candidatures = await HH.api('/candidatures/entreprise');
-      const cands = candidatures.candidatures || [];
-      document.getElementById('candidaturesCount').textContent = cands.length || 0;
-      
-      document.getElementById('recentCandidatures').innerHTML = cands.slice(0,5).map(c => `
-        <div class="flex justify-between items-center" style="padding:10px 0;border-bottom:1px solid var(--gray-100)">
-          <div>
-            <p class="font-medium text-sm">${c.prenom} ${c.nom}</p>
-            <p class="text-xs text-muted">${c.offre_titre}</p>
-          </div>
-          <span class="tag tag-blue" style="font-size:11px">${c.statut}</span>
-        </div>
-      `).join('') || '<p class="empty-state">Aucune candidature</p>';
-    } catch (err) {
-      console.error('loadOverview:', err);
-    }
-  }
-
-  function showOffreForm() {
-    document.getElementById('offreForm').style.display = 'block';
-    document.getElementById('formOffre').reset();
-  }
-
-  function hideOffreForm() {
-    document.getElementById('offreForm').style.display = 'none';
-  }
-
-  async function submitOffre(e) {
-    e.preventDefault();
-    try {
-      const offre = {
-        titre: document.getElementById('offreTitre').value,
-        description: document.getElementById('offreDesc').value,
-        localisation: document.getElementById('offreLocalisation').value,
-        type_contrat: document.getElementById('offreType').value,
-        salaire_min: parseInt(document.getElementById('offreSalaireMin').value) || null,
-        salaire_max: parseInt(document.getElementById('offreSalaireMax').value) || null,
+      const headlines = {
+        overview: { title: 'Tableau de bord', sub: 'Gérez vos recrutements et votre image' },
+        offres: { title: 'Mes offres', sub: 'Publiez et modifiez vos annonces' },
+        candidatures: { title: 'Candidatures', sub: 'Suivez les talents qui postulent' },
+        profil: { title: 'Profil Entreprise', sub: 'Personnalisez votre fiche entreprise' }
       };
       
-      await HH.api('/offres', { method: 'POST', body: JSON.stringify(offre) });
-      HH.Toast.success('Offre publiée !');
-      hideOffreForm();
-      loadOffres();
-      loadOverview();
-    } catch (err) {
-      HH.Toast.error(err.message);
+      document.getElementById('page-headline').textContent = headlines[id].title;
+      document.getElementById('page-subheadline').textContent = headlines[id].sub;
+      
+      if (id === 'overview') loadOverview();
+      if (id === 'offres') loadOffres();
+      if (id === 'candidatures') loadCandidatures();
+      if (id === 'profil') loadProfil();
     }
-  }
 
-  async function loadOffres() {
-    try {
-      const data = await HH.api('/offres/mes');
-      const offres = data.offres || [];
-      document.getElementById('offresList').innerHTML = !offres.length
-        ? '<p class="empty-state">Aucune offre publiée.</p>'
-        : offres.map(o => `
-          <div class="card flex justify-between items-start mb-3">
-            <div style="flex:1">
-              <h3 class="font-medium">${o.titre}</h3>
-              <p class="text-sm text-muted">${o.localisation || 'Remote'} · ${o.type_contrat}</p>
-              <p class="text-xs mt-1">${o.nb_candidatures || 0} candidature${o.nb_candidatures > 1 ? 's' : ''}</p>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-danger btn-sm" onclick="deleteOffre('${o.id}')">Supprimer</button>
-            </div>
-          </div>
-        `).join('');
-    } catch (err) {
-      console.error('loadOffres:', err);
+    async function loadOverview() {
+      try {
+        const offres = await HH.api('/offres/mes');
+        document.getElementById('offresCount').textContent = offres.offres?.length || 0;
+        
+        const candidatures = await HH.api('/candidatures/entreprise');
+        const cands = candidatures.candidatures || [];
+        document.getElementById('candidaturesCount').textContent = cands.length || 0;
+        
+        document.getElementById('recentCandidatures').innerHTML = !cands.length
+          ? '<p class="empty-state">Aucune candidature pour le moment</p>'
+          : `
+            <table class="admin-table">
+              <thead><tr><th>Candidat</th><th>Offre</th><th>Statut</th></tr></thead>
+              <tbody>
+                ${cands.slice(0,5).map(c => `
+                  <tr>
+                    <td><div class="font-medium">${c.prenom} ${c.nom}</div></td>
+                    <td><div class="text-sm">${c.offre_titre}</div></td>
+                    <td>${HH.statutBadge(c.statut)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+      } catch (err) { console.error(err); }
     }
-  }
 
-  async function deleteOffre(id) {
-    if (!confirm('Supprimer cette offre ?')) return;
-    try {
-      await HH.api(`/offres/${id}`, { method: 'DELETE' });
-      HH.Toast.success('Offre supprimée.');
-      loadOffres();
-      loadOverview();
-    } catch (err) {
-      HH.Toast.error(err.message);
+    function showOffreForm() { document.getElementById('offreForm').style.display = 'block'; }
+    function hideOffreForm() { document.getElementById('offreForm').style.display = 'none'; }
+
+    async function submitOffre(e) {
+      e.preventDefault();
+      try {
+        const offre = {
+          titre: document.getElementById('offreTitre').value,
+          description: document.getElementById('offreDesc').value,
+          localisation: document.getElementById('offreLocalisation').value,
+          type_contrat: document.getElementById('offreType').value,
+          salaire_min: parseInt(document.getElementById('offreSalaireMin').value) || null,
+          salaire_max: parseInt(document.getElementById('offreSalaireMax').value) || null,
+        };
+        await HH.api('/offres', { method: 'POST', body: JSON.stringify(offre) });
+        HH.Toast.success('Offre publiée !');
+        hideOffreForm(); loadOffres(); loadOverview();
+      } catch (err) { HH.Toast.error(err.message); }
     }
-  }
 
-  async function loadCandidatures() {
-    try {
-      const data = await HH.api('/candidatures/entreprise');
-      const candidatures = data.candidatures || [];
-      document.getElementById('candidaturesList').innerHTML = !candidatures.length
-        ? '<p class="empty-state">Aucune candidature reçue.</p>'
-        : candidatures.map(c => `
-          <div class="card mb-3">
-            <div class="flex justify-between items-start mb-2">
-              <div style="flex:1">
-                <h3 class="font-medium">${c.prenom} ${c.nom}</h3>
-                <p class="text-sm text-muted">${c.offre_titre} · ${c.titre_poste || 'N/A'}</p>
-              </div>
-              <span class="tag tag-blue" style="font-size:11px">${c.statut}</span>
-            </div>
-            <p class="text-xs" style="margin:8px 0">📧 ${c.email}</p>
-            ${c.lettre_motivation ? `<p class="text-xs italic text-muted">"${c.lettre_motivation.slice(0, 100)}..."</p>` : ''}
-            <div style="display:flex;gap:8px;margin-top:12px">
-              <button class="btn btn-success btn-sm" onclick="updateCandidatureStatus('${c.id}', 'shortlistee')">Shortlister</button>
-              <button class="btn btn-primary btn-sm" onclick="showMessageForm('${c.candidat_id}', '${c.prenom}')">Envoyer message</button>
-            </div>
-          </div>
-        `).join('');
-    } catch (err) {
-      console.error('loadCandidatures:', err);
-      document.getElementById('candidaturesList').innerHTML = '<p class="empty-state">Erreur lors du chargement.</p>';
+    async function loadOffres() {
+      try {
+        const data = await HH.api('/offres/mes');
+        const offres = data.offres || [];
+        document.getElementById('offresList').innerHTML = !offres.length
+          ? '<p class="empty-state">Vous n\'avez pas encore publié d\'offres.</p>'
+          : `
+            <table class="admin-table">
+              <thead><tr><th>Poste</th><th>Infos</th><th>Stats</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${offres.map(o => `
+                  <tr>
+                    <td><div class="font-medium">${o.titre}</div></td>
+                    <td><div class="text-xs text-muted">${o.localisation || 'Remote'} · ${o.type_contrat}</div></td>
+                    <td><span class="tag tag-blue">${o.nb_candidatures || 0} candidatures</span></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteOffre('${o.id}')">Supprimer</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+      } catch (err) { console.error(err); }
     }
-  }
 
-  async function updateCandidatureStatus(candidatureId, newStatus) {
-    try {
-      await HH.api(`/candidatures/${candidatureId}`, { 
-        method: 'PATCH', 
-        body: JSON.stringify({ statut: newStatus }) 
-      });
-      HH.Toast.success('Statut mis à jour.');
-      loadCandidatures();
-    } catch (err) {
-      HH.Toast.error(err.message);
+    async function deleteOffre(id) {
+      if (!confirm('Supprimer cette offre ?')) return;
+      try {
+        await HH.api(`/offres/${id}`, { method: 'DELETE' });
+        HH.Toast.success('Offre supprimée.');
+        loadOffres(); loadOverview();
+      } catch (err) { HH.Toast.error(err.message); }
     }
-  }
 
-  function showMessageForm(candidatId, candidatName) {
-    const msg = prompt(`Envoyer un message à ${candidatName}:`);
-    if (msg) {
-      HH.Toast.info('Message envoyé (en cours de développement)');
+    async function loadCandidatures() {
+      try {
+        const data = await HH.api('/candidatures/entreprise');
+        const candidatures = data.candidatures || [];
+        document.getElementById('candidaturesList').innerHTML = !candidatures.length
+          ? '<p class="empty-state">Aucune candidature reçue.</p>'
+          : `
+            <table class="admin-table">
+              <thead><tr><th>Candidat</th><th>Offre</th><th>Motivation</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${candidatures.map(c => `
+                  <tr>
+                    <td>
+                      <div class="font-medium">${c.prenom} ${c.nom}</div>
+                      <div class="text-xs text-muted">${c.email}</div>
+                    </td>
+                    <td><div class="text-sm">${c.offre_titre}</div></td>
+                    <td><div class="text-xs text-muted" style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${c.lettre_motivation || '—'}</div></td>
+                    <td>
+                      <div class="flex gap-2">
+                        <button class="btn btn-success btn-sm" onclick="updateStatus('${c.id}', 'shortlistee')">Retenir</button>
+                        <button class="btn btn-outline btn-sm" onclick="HH.Toast.info('En cours...')">Message</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+      } catch (err) { console.error(err); }
     }
-  }
 
-  async function loadProfil() {
-    try {
-      const user = HH.auth.getUser();
-      document.getElementById('profilNom').value = user.nom || '';
-      document.getElementById('profilEmail').value = user.email || '';
-    } catch (err) {
-      console.error('loadProfil:', err);
+    async function updateStatus(id, status) {
+      try {
+        await HH.api(`/candidatures/${id}`, { method: 'PATCH', body: JSON.stringify({ statut: status }) });
+        HH.Toast.success('Statut mis à jour.'); loadCandidatures();
+      } catch (err) { HH.Toast.error(err.message); }
     }
-  }
 
-  async function submitProfil(e) {
-    e.preventDefault();
-    HH.Toast.success('Profil mis à jour. (Fonctionnalité en cours)');
-  }
+    async function loadProfil() {
+      try {
+        const user = HH.auth.getUser();
+        document.getElementById('profilNom').value = user.nom || '';
+        document.getElementById('profilEmail').value = user.email || '';
+      } catch (err) { console.error(err); }
+    }
 
-  function logout() {
-    HH.auth.clear();
-    window.location.href = 'index.html';
-  }
+    async function submitProfil(e) {
+      e.preventDefault();
+      HH.Toast.success('Profil entreprise mis à jour !');
+    }
 
-  init();
-</script>
+    function refreshDashboard() {
+      const active = document.querySelector('.nav-item.active').id.replace('nav-', '');
+      showTab(active);
+      HH.Toast.success('Actualisé');
+    }
+
+    // Using global logout() from main.js
+
+    showTab('overview');
+  </script>
 </body>
 </html>

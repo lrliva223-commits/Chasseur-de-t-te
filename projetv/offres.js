@@ -64,28 +64,31 @@ async function loadOffres(page = 1, filters = {}) {
     }
 
     list.innerHTML = data.offres.map(o => `
-      <div class="offre-card mb-3">
-        <div class="offre-top">
+      <div class="job-card-modern">
+        <div class="job-card-top">
           <div>
-            <h3 class="offre-titre">${o.titre}</h3>
-            <p class="offre-meta">
-              ${o.entreprise_nom || (o.recruteur_prenom + ' ' + o.recruteur_nom) || '—'}
-              ${o.localisation ? ' · ' + o.localisation : ''}
-              · ${o.type_contrat}
-            </p>
+            <h3 class="job-card-title">${o.titre}</h3>
+            <div class="job-card-company">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              <span>${o.entreprise_nom || (o.recruteur_prenom + ' ' + o.recruteur_nom) || '—'}</span>
+              ${o.localisation ? `<span>·</span> <span>${o.localisation}</span>` : ''}
+            </div>
           </div>
-          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-            ${isNew(o.date_publication) ? '<span class="tag tag-blue">Nouveau</span>' : ''}
+          <div style="display:flex;gap:8px">
+            <span class="job-card-tag">${o.type_contrat}</span>
+            ${isNew(o.date_publication) ? '<span class="job-card-tag new">Nouveau</span>' : ''}
           </div>
         </div>
-        <p class="offre-desc">${truncate(o.description, 140)}</p>
-        <div class="offre-footer">
-          <span class="salary">${o.salaire_min ? o.salaire_min + (o.salaire_max ? '–' + o.salaire_max : '+') + 'k€' : '—'}</span>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span class="text-xs text-muted">${HH.formatDate(o.date_publication)}</span>
+        <p class="job-card-desc">${truncate(o.description, 200)}</p>
+        <div class="job-card-footer">
+          <div class="job-card-salary">
+            ${o.salaire_min ? o.salaire_min + (o.salaire_max ? ' – ' + o.salaire_max : '+') + ' k€ / an' : 'Salaire non précisé'}
+          </div>
+          <div style="display:flex;gap:12px;align-items:center">
+            <span class="text-xs text-muted">Publiée ${HH.formatDate(o.date_publication)}</span>
             ${HH.auth.isLogged()
-              ? `<button class="btn btn-primary btn-sm" onclick="postuler('${o.id}', this)">Postuler</button>`
-              : `<a href="login.html" class="btn btn-primary btn-sm">Postuler</a>`
+              ? `<button class="btn btn-primary btn-sm" onclick="postuler('${o.id}', this)">Postuler maintenant</button>`
+              : `<a href="login.html" class="btn btn-primary btn-sm">Connectez-vous pour postuler</a>`
             }
           </div>
         </div>

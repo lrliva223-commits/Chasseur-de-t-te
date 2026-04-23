@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const auth = require('../middleware/auth');
@@ -75,41 +75,90 @@ router.post('/', auth, async (req, res) => {
 // GET /offres - Liste des offres avec pagination et filtres
 router.get('/', async (req, res) => {
   try {
-    console.log('GET / called with query:', req.query);
-    const { entreprise_id } = req.query;
-    
-    let whereClause = 'WHERE statut = ?';
-    let params = ['active'];
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      localisation,
+      type_contrat,
+      salaire_min,
+      entreprise_id
+    } = req.query;
+
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.max(parseInt(limit, 10) || 10, 1);
+    const offset = (pageNum - 1) * limitNum;
+
+    let whereClause = 'WHERE o.statut = ?';
+    const params = ['active'];
+
+    if (search) {
+      whereClause += ' AND (o.titre LIKE ? OR o.description LIKE ? OR e.nom LIKE ?)';
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm, searchTerm);
+    }
+
+    if (localisation) {
+      whereClause += ' AND o.localisation LIKE ?';
+      params.push(`%${localisation}%`);
+    }
+
+    if (type_contrat) {
+      whereClause += ' AND o.type_contrat = ?';
+      params.push(type_contrat);
+    }
+
+    if (salaire_min) {
+      whereClause += ' AND o.salaire_min >= ?';
+      params.push(parseInt(salaire_min, 10));
+    }
 
     if (entreprise_id) {
-      whereClause += ' AND entreprise_id = ?';
+      whereClause += ' AND o.entreprise_id = ?';
       params.push(entreprise_id);
     }
 
-    console.log('Where clause:', whereClause);
-    console.log('Params:', params);
-
-    // Compter le total
     const [countResult] = await pool.execute(
-      `SELECT COUNT(*) as total FROM offres_emploi ${whereClause}`,
+      `SELECT COUNT(*) as total FROM offres_emploi o
+       LEFT JOIN entreprises e ON o.entreprise_id = e.id
+       ${whereClause}`,
       params
     );
-    const total = countResult[0].total;
-    console.log('Count result:', total);
 
-    // Récupérer les offres
+    const total = countResult[0].total;
+
     const [offres] = await pool.execute(
-      `SELECT id, titre, description, localisation, type_contrat, salaire_min, salaire_max, date_publication, entreprise_id, recruteur_id FROM offres_emploi ${whereClause} ORDER BY date_publication DESC LIMIT 10`,
+      `SELECT
+         o.id,
+         o.titre,
+         o.description,
+         o.localisation,
+         o.type_contrat,
+         o.salaire_min,
+         o.salaire_max,
+         o.date_publication,
+         o.entreprise_id,
+         o.recruteur_id,
+         e.nom as entreprise_nom,
+         e.secteur as entreprise_secteur,
+         CONCAT(ur.prenom, ' ', ur.nom) as recruteur_nom,
+         ur.prenom as recruteur_prenom
+       FROM offres_emploi o
+       LEFT JOIN entreprises e ON o.entreprise_id = e.id
+       LEFT JOIN recruteurs r ON o.recruteur_id = r.id
+       LEFT JOIN utilisateurs ur ON r.utilisateur_id = ur.id
+       ${whereClause}
+       ORDER BY o.date_publication DESC
+       LIMIT ${limitNum} OFFSET ${offset}`,
       params
     );
-    console.log('Offres result:', offres.length);
 
     res.json({
       offres,
       total,
-      page: 1,
-      limit: 10,
-      totalPages: Math.ceil(total / 10)
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum)
     });
   } catch (err) {
     console.error('Erreur dans GET /offres:', err);
@@ -173,13 +222,15 @@ router.delete('/:id', auth, async (req, res) => {
     }
 
     const offer = offres[0];
-    if (req.user.role === 'entreprise') {
+    if (req.user.role === 'admin') {
+      // Admin bypasses checks
+    } else if (req.user.role === 'entreprise') {
       const [rows] = await pool.execute('SELECT id FROM entreprises WHERE utilisateur_id = ?', [userId]);
       if (!rows.length || rows[0].id !== offer.entreprise_id) {
         return res.status(403).json({ error: 'Accès refusé.' });
       }
     } else {
-      return res.status(403).json({ error: 'Accès réservé aux entreprises.' });
+      return res.status(403).json({ error: 'Accès réservé aux entreprises et administrateurs.' });
     }
 
     await pool.execute('DELETE FROM offres_emploi WHERE id = ?', [id]);

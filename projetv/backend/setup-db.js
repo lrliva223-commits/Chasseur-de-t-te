@@ -5,7 +5,7 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const DB_NAME = process.env.DB_NAME || 'headhunter_db';
 
