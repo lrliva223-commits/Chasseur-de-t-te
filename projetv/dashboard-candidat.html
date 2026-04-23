@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon espace — Chasseur de tête</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo">Chasseur de tête  page de candidat</a>
+    <ul class="nav-links" id="navLinks">
+      <li id="navAuth"></li>
+    </ul>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="dashboard">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Mon espace candidat</div>
+    <nav class="sidebar-nav">
+      <a href="dashboard-candidat.html" class="active">Tableau de bord</a>
+      <a href="offres.html">Offres d'emploi</a>
+      <a href="#" id="linkCandidatures">Mes candidatures</a>
+      <a href="messagerie.html">Messagerie</a>
+      <a href="profil.html">Mon profil</a>
+      <a href="#" onclick="logout()">Déconnexion</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <h1 class="page-title" id="welcomeTitle">Bonjour !</h1>
+    <p class="page-sub">Voici un résumé de votre activité</p>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Candidatures</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">En attente</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Entretiens</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Acceptées</div></div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Candidatures récentes -->
+      <div class="card">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="card-title" style="margin:0">Dernières candidatures</h2>
+          <a href="offres.html" class="btn btn-outline btn-sm">+ Postuler</a>
+        </div>
+        <div id="candidaturesList"><p class="empty-state">Chargement…</p></div>
+      </div>
+
+      <!-- Offres recommandées -->
+      <div class="card">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="card-title" style="margin:0">Offres recommandées</h2>
+          <a href="offres.html" class="btn btn-outline btn-sm">Voir tout</a>
+        </div>
+        <div id="offresList"><p class="empty-state">Chargement…</p></div>
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div>
+      <div class="card mb-4">
+        <h2 class="card-title">Actions rapides</h2>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <a href="offres.html" class="btn btn-outline" style="justify-content:space-between">Rechercher des offres <span>→</span></a>
+          <a href="profil.html" class="btn btn-outline" style="justify-content:space-between">Mettre à jour mon profil <span>→</span></a>
+          <a href="messagerie.html" class="btn btn-outline" style="justify-content:space-between">Messagerie <span>→</span></a>
+        </div>
+      </div>
+
+        <!-- Complétion profil -->
+        <div class="card">
+          <h2 class="card-title">Complétion du profil</h2>
+          <div class="flex justify-between mb-2">
+            <span class="text-sm" id="profilPct">—%</span>
+            <span class="text-xs text-muted">Complétez pour être plus visible</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="profilBar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+  HH.requireAuth('candidat');
+  const user = HH.auth.getUser();
+  document.getElementById('welcomeTitle').textContent = `Bonjour, ${user?.prenom || ''} 👋`;
+
+  async function loadDashboard() {
+    const data = await HH.api('/candidatures/mes');
+    const candidatures = data?.candidatures || [];
+
+    // Stats
+    const stats = [
+      candidatures.length,
+      candidatures.filter(c => ['envoyee','vue'].includes(c.statut)).length,
+      candidatures.filter(c => c.statut === 'entretien').length,
+      candidatures.filter(c => c.statut === 'acceptee').length,
+    ];
+    const cards = document.querySelectorAll('#statsGrid .stat-num');
+    stats.forEach((v, i) => { if (cards[i]) cards[i].textContent = v; });
+
+    // Liste candidatures
+    const list = document.getElementById('candidaturesList');
+    if (!candidatures.length) {
+      list.innerHTML = '<p class="empty-state">Aucune candidature.<br><a href="offres.html" class="btn btn-primary btn-sm mt-3">Parcourir les offres</a></p>';
+    } else {
+      list.innerHTML = candidatures.slice(0, 5).map(c => `
+        <div class="flex justify-between items-center" style="padding:10px 0;border-bottom:1px solid var(--gray-100)">
+          <div>
+            <p class="font-medium text-sm">${c.offre_titre || '—'}</p>
+            <p class="text-xs text-muted">${c.entreprise_nom || '—'} · ${HH.formatDate(c.date_envoi)}</p>
+          </div>
+          ${HH.statutBadge(c.statut)}
+        </div>
+      `).join('') + (candidatures.length > 5 ? `<p class="text-xs text-muted mt-3 text-center">Et ${candidatures.length - 5} autres…</p>` : '');
+    }
+
+    // Profil complétion
+    const profilData = await HH.api('/candidats/profil').catch(() => null);
+    if (profilData?.profil) {
+      const p = profilData.profil;
+      const score = [p.titre_poste, p.resume, p.disponibilite, p.salaire_min, p.cv_url].filter(Boolean).length;
+      const pct = Math.round(score / 5 * 100);
+      document.getElementById('profilPct').textContent = pct + '%';
+      document.getElementById('profilBar').style.width = pct + '%';
+    }
+
+    // Charger offres recommandées
+    try {
+      const offresData = await HH.api('/offres?limit=3');
+      const offres = offresData?.offres || [];
+      const offresList = document.getElementById('offresList');
+      if (!offres.length) {
+        offresList.innerHTML = '<p class="empty-state">Aucune offre disponible</p>';
+      } else {
+        offresList.innerHTML = offres.map(o => `
+          <div style="padding:10px 0;border-bottom:1px solid var(--gray-100)">
+            <h4 class="font-medium text-sm" style="margin:0 0 4px 0">${o.titre}</h4>
+            <p class="text-xs text-muted" style="margin:0 0 8px 0">${o.entreprise_nom || (o.recruteur_prenom + ' ' + o.recruteur_nom) || '—'} · ${o.localisation || ''}</p>
+            <a href="offres.html" class="btn btn-primary btn-sm">Postuler</a>
+          </div>
+        `).join('');
+      }
+    } catch (err) {
+      document.getElementById('offresList').innerHTML = '<p class="empty-state">Erreur de chargement</p>';
+    }
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

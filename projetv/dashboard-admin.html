@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administration — HeadHunter</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo">HeadHunter · Admin</a>
+    <ul class="nav-links" id="navLinks">
+      <li id="navAuth"></li>
+    </ul>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-logo">Administration</div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active" onclick="showTab('overview')">Vue globale</a>
+      <a href="#" onclick="showTab('users')">Utilisateurs</a>
+      <a href="#" onclick="showTab('entreprises')">Entreprises</a>
+      <a href="#" onclick="logout()">Déconnexion</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- Vue globale -->
+    <div id="tab-overview">
+      <h1 class="page-title">Vue globale</h1>
+      <div class="stats-grid mb-4">
+        <div class="stat-card"><div class="stat-num" id="sUsers">—</div><div class="stat-lbl">Utilisateurs actifs</div></div>
+        <div class="stat-card"><div class="stat-num" id="sEnt">—</div><div class="stat-lbl">Entreprises</div></div>
+        <div class="stat-card"><div class="stat-num" id="sOffres">—</div><div class="stat-lbl">Offres actives</div></div>
+        <div class="stat-card"><div class="stat-num" id="sCand">—</div><div class="stat-lbl">Candidatures</div></div>
+      </div>
+      <div class="card">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="card-title" style="margin:0">Entreprises en attente</h2>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-sm btn-primary" onclick="refreshDashboard()">Actualiser</button>
+            <span class="tag tag-amber" id="pendingCount"></span>
+          </div>
+        </div>
+        <div id="pendingList"><p class="empty-state">Chargement…</p></div>
+      </div>
+    </div>
+
+    <!-- Utilisateurs -->
+    <div id="tab-users" style="display:none">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="page-title" style="margin:0">Utilisateurs</h1>
+        <div class="flex gap-2">
+          <select id="roleFilter" class="form-input" style="width:150px" onchange="filterUsers(document.getElementById('userSearch').value)">
+            <option value="">Tous rôles</option>
+            <option value="candidat">Candidat</option>
+            <option value="recruteur">Recruteur</option>
+            <option value="entreprise">Entreprise</option>
+            <option value="admin">Admin</option>
+          </select>
+          <input class="form-input" id="userSearch" type="text" placeholder="Rechercher…" style="width:220px" oninput="filterUsers(this.value)" />
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entreprises -->
+    <div id="tab-entreprises" style="display:none">
+      <h1 class="page-title">Validation des entreprises</h1>
+      <div id="entreprisesList"><p class="empty-state">Chargement…</p></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="main.js"></script>
+<script>
+// HH.requireAuth('admin'); // temporairement désactivée pendant les tests
+let allUsers = [];
+
+function showTab(id) {
+  ['overview','users','entreprises'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === id ? 'block' : 'none';
+  });
+  if (id === 'users')       loadUsers();
+  if (id === 'entreprises') loadEntreprises();
+}
+
+// Stats
+async function loadStats() {
+  try {
+    const data = await HH.api('/admin/stats');
+    document.getElementById('sUsers').textContent  = data.users;
+    document.getElementById('sEnt').textContent    = data.entreprises;
+    document.getElementById('sOffres').textContent = data.offres;
+    document.getElementById('sCand').textContent   = data.candidatures;
+  } catch {}
+}
+
+// Entreprises en attente
+async function loadPending() {
+  try {
+    const data = await HH.api('/admin/entreprises-pending');
+    const list = data.entreprises || [];
+    document.getElementById('pendingCount').textContent = list.length + ' en attente';
+    if (!list.length) { document.getElementById('pendingList').innerHTML = '<p class="empty-state">Aucune entreprise en attente.</p>'; return; }
+    document.getElementById('pendingList').innerHTML = list.map(e => `
+      <div class="flex justify-between items-center" style="padding:10px 0;border-bottom:1px solid var(--gray-100)">
+        <div>
+          <p class="font-medium text-sm">${e.nom}</p>
+          <p class="text-xs text-muted">SIRET : ${e.siret || '—'} · ${e.secteur || '—'}</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-success btn-sm" onclick="validerEnt('${e.id}', true)">Valider</button>
+          <button class="btn btn-danger btn-sm" onclick="validerEnt('${e.id}', false)">Refuser</button>
+          <button class="btn btn-danger btn-sm" style="background: #ef4444;" onclick="deleteEntreprise('${e.id}')">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) { 
+    console.error('Erreur loadPending:', err);
+    document.getElementById('pendingList').innerHTML = '<p class="empty-state">Erreur lors du chargement.</p>';
+  }
+}
+
+async function validerEnt(id, verifie) {
+  try {
+    await HH.api(`/admin/entreprises/${id}/valider`, { method: 'PATCH', body: JSON.stringify({ verifie }) });
+    HH.Toast.success(verifie ? 'Entreprise validée.' : 'Entreprise refusée.');
+    loadPending(); loadStats();
+  } catch (err) { HH.Toast.error(err.message); }
+}
+
+// Users
+const ROLE_TAGS = { candidat:'tag-blue', recruteur:'tag-green', entreprise:'tag-amber', admin:'tag-gray' };
+async function loadUsers() {
+  try {
+    const data = await HH.api('/admin/users');
+    allUsers = data.users || [];
+    renderUsers(allUsers);
+  } catch {}
+}
+function renderUsers(list) {
+  document.getElementById('usersTable').innerHTML = list.map(u => `
+    <tr>
+      <td><div class="flex items-center gap-2"><div class="avatar">${(u.prenom?.[0]||'')+(u.nom?.[0]||'')}</div>${u.prenom} ${u.nom}</div></td>
+      <td class="text-muted">${u.email}</td>
+      <td><span class="tag ${ROLE_TAGS[u.role]||'tag-gray'}">${u.role}</span></td>
+      <td><span class="tag ${u.statut==='actif'?'tag-green':'tag-red'}">${u.statut}</span></td>
+      <td>
+        <div class="flex gap-2">
+          ${u.statut === 'actif'
+            ? `<button class="btn btn-danger btn-sm" onclick="updateStatut('${u.id}','suspendu')">Suspendre</button>`
+            : `<button class="btn btn-success btn-sm" onclick="updateStatut('${u.id}','actif')">Réactiver</button>`
+          }
+          <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Supprimer</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+function filterUsers(q) {
+  const role = document.getElementById('roleFilter').value;
+  const normalized = q.trim().toLowerCase();
+  const filtered = allUsers.filter(u => {
+    const matchesText = `${u.nom} ${u.prenom} ${u.email}`.toLowerCase().includes(normalized);
+    const matchesRole = !role || u.role === role;
+    return matchesText && matchesRole;
+  });
+  renderUsers(filtered);
+}
+
+function refreshDashboard() {
+  loadStats();
+  loadPending();
+  if (document.getElementById('tab-users').style.display === 'block') loadUsers();
+  if (document.getElementById('tab-entreprises').style.display === 'block') loadEntreprises();
+  HH.Toast.success('Dashboard actualisé');
+}
+
+async function updateStatut(id, statut) {
+  try {
+    await HH.api(`/admin/users/${id}/statut`, { method: 'PATCH', body: JSON.stringify({ statut }) });
+    HH.Toast.success('Statut mis à jour.');
+    loadUsers();
+  } catch (err) { HH.Toast.error(err.message); }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Confirmez-vous la suppression de cet utilisateur ?')) return;
+  try {
+    await HH.api(`/admin/users/${id}`, { method: 'DELETE' });
+    HH.Toast.success('Utilisateur supprimé.');
+    loadUsers();
+  } catch (err) { HH.Toast.error(err.message); }
+}
+
+async function deleteEntreprise(id) {
+  if (!confirm('Confirmez-vous la suppression de cette entreprise ? Toutes ses offres seront également supprimées.')) return;
+  try {
+    await HH.api(`/admin/entreprises/${id}`, { method: 'DELETE' });
+    HH.Toast.success('Entreprise supprimée.');
+    loadEntreprises();
+  } catch (err) { HH.Toast.error(err.message); }
+}
+
+// Entreprises
+async function loadEntreprises() {
+  try {
+    const data = await HH.api('/admin/entreprises-pending');
+    const list = data.entreprises || [];
+    document.getElementById('entreprisesList').innerHTML = !list.length
+      ? '<p class="empty-state">Aucune entreprise en attente.</p>'
+      : list.map(e => `
+          <div class="card mb-3 flex justify-between items-center">
+            <div><p class="font-medium">${e.nom}</p><p class="text-xs text-muted">SIRET : ${e.siret||'—'} · ${e.secteur||'—'} · ${e.adresse||'—'}</p></div>
+            <div class="flex gap-2">
+              <button class="btn btn-success btn-sm" onclick="validerEnt('${e.id}',true)">Valider</button>
+              <button class="btn btn-danger btn-sm" onclick="validerEnt('${e.id}',false)">Refuser</button>
+              <button class="btn btn-danger btn-sm" style="background: #ef4444;" onclick="deleteEntreprise('${e.id}')">Supprimer</button>
+            </div>
+          </div>`).join('');
+  } catch {}
+}
+
+loadStats();
+loadPending();
+</script>
+</body>
+</html>

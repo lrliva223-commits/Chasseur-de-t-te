@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Espace entreprise — Chasseur de tête</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-logo">Entreprise</div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active" onclick="showTab('overview')">Tableau de bord</a>
+      <a href="#" onclick="showTab('offres')">Mes offres</a>
+      <a href="#" onclick="showTab('candidatures')">Candidatures</a>
+      <a href="#" onclick="showTab('profil')">Mon profil</a>
+      <a href="#" onclick="logout()">Déconnexion</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <!-- OVERVIEW -->
+    <div id="tab-overview">
+      <div class="container" style="padding:24px">
+        <h1 class="page-title">Tableau de bord</h1>
+        <div class="stats-grid mb-4">
+          <div class="stat-card"><div class="stat-num" id="offresCount">—</div><div class="stat-lbl">Offres publiées</div></div>
+          <div class="stat-card"><div class="stat-num" id="candidaturesCount">—</div><div class="stat-lbl">Candidatures reçues</div></div>
+        </div>
+
+        <div class="card">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="card-title" style="margin:0">Dernières candidatures</h2>
+            <button class="btn btn-primary btn-sm" onclick="showTab('candidatures')">Voir tout →</button>
+          </div>
+          <div id="recentCandidatures"><p class="empty-state">Chargement…</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFRES -->
+    <div id="tab-offres" style="display:none">
+      <div class="container" style="padding:24px">
+        <div class="flex justify-between items-center mb-4">
+          <h1 class="page-title" style="margin:0">Mes offres d'emploi</h1>
+          <button class="btn btn-primary" onclick="showOffreForm()">+ Créer une offre</button>
+        </div>
+
+        <div id="offreForm" class="card" style="display:none;max-width:700px">
+          <h3>Créer une nouvelle offre</h3>
+          <form id="formOffre" onsubmit="submitOffre(event)"
+            style="display:grid;gap:12px">
+            <input type="hidden" id="offreId" />
+            <div>
+              <label class="form-label">Titre du poste</label>
+              <input class="form-input" id="offreTitre" type="text" placeholder="Ex: Développeur Python" required />
+            </div>
+            <div>
+              <label class="form-label">Description</label>
+              <textarea class="form-input" id="offreDesc" placeholder="Décrivez le poste..." style="min-height:120px" required></textarea>
+            </div>
+            <div>
+              <label class="form-label">Localisation</label>
+              <input class="form-input" id="offreLocalisation" type="text" placeholder="Paris, Lyon, Remote..." />
+            </div>
+            <div class="grid-2" style="gap:12px">
+              <div>
+                <label class="form-label">Type de contrat</label>
+                <select class="form-input" id="offreType" required>
+                  <option>CDI</option>
+                  <option>CDD</option>
+                  <option>Freelance</option>
+                  <option>Stage</option>
+                  <option>Alternance</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Salaire min (k€)</label>
+                <input class="form-input" id="offreSalaireMin" type="number" placeholder="0" />
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Salaire max (k€)</label>
+              <input class="form-input" id="offreSalaireMax" type="number" placeholder="0" />
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="submit" class="btn btn-primary">Publier</button>
+              <button type="button" class="btn btn-outline" onclick="hideOffreForm()">Annuler</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="offresList"><p class="empty-state">Chargement…</p></div>
+      </div>
+    </div>
+
+    <!-- CANDIDATURES -->
+    <div id="tab-candidatures" style="display:none">
+      <div class="container" style="padding:24px">
+        <h1 class="page-title">Candidatures reçues</h1>
+        <div id="candidaturesList"><p class="empty-state">Chargement…</p></div>
+      </div>
+    </div>
+
+    <!-- PROFIL -->
+    <div id="tab-profil" style="display:none">
+      <div class="container" style="padding:24px;max-width:600px">
+        <h1 class="page-title">Mon profil entreprise</h1>
+        <form id="formProfil" onsubmit="submitProfil(event)" style="display:grid;gap:16px">
+          <div>
+            <label class="form-label">Nom de l'entreprise</label>
+            <input class="form-input" id="profilNom" type="text" placeholder="Nom" required />
+          </div>
+          <div>
+            <label class="form-label">Logo (URL)</label>
+            <input class="form-input" id="profilLogo" type="url" placeholder="https://..." />
+          </div>
+          <div>
+            <label class="form-label">Secteur d'activité</label>
+            <input class="form-input" id="profilSecteur" type="text" placeholder="Ex: Technologie" />
+          </div>
+          <div>
+            <label class="form-label">Taille de l'entreprise</label>
+            <select class="form-input" id="profilTaille">
+              <option>1-10</option>
+              <option>10-50</option>
+              <option>50-200</option>
+              <option>200+</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Adresse</label>
+            <input class="form-input" id="profilAdresse" type="text" placeholder="Adresse" />
+          </div>
+          <div>
+            <label class="form-label">Téléphone de contact</label>
+            <input class="form-input" id="profilTelephone" type="tel" placeholder="+261..." />
+          </div>
+          <div>
+            <label class="form-label">Email de contact</label>
+            <input class="form-input" id="profilEmail" type="email" placeholder="contact@..." />
+          </div>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="main.js"></script>
+<script>
+  HH.requireAuth('entreprise');
+  let entrepriseId = null;
+  let currentOffre = null;
+
+  function showTab(id) {
+    ['overview', 'offres', 'candidatures', 'profil'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === id ? 'block' : 'none';
+    });
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    if (id === 'overview') loadOverview();
+    if (id === 'offres') loadOffres();
+    if (id === 'candidatures') loadCandidatures();
+    if (id === 'profil') loadProfil();
+  }
+
+  async function init() {
+    try {
+      const user = HH.auth.getUser();
+      const [rows] = await HH.api('/candidats'); // Adapter pour récupérer entrepriseId
+    } catch (err) {
+      console.error('Init error:', err);
+    }
+    loadOverview();
+  }
+
+  async function loadOverview() {
+    try {
+      const offres = await HH.api('/offres/mes');
+      document.getElementById('offresCount').textContent = offres.offres?.length || 0;
+      
+      const candidatures = await HH.api('/candidatures/entreprise');
+      const cands = candidatures.candidatures || [];
+      document.getElementById('candidaturesCount').textContent = cands.length || 0;
+      
+      document.getElementById('recentCandidatures').innerHTML = cands.slice(0,5).map(c => `
+        <div class="flex justify-between items-center" style="padding:10px 0;border-bottom:1px solid var(--gray-100)">
+          <div>
+            <p class="font-medium text-sm">${c.prenom} ${c.nom}</p>
+            <p class="text-xs text-muted">${c.offre_titre}</p>
+          </div>
+          <span class="tag tag-blue" style="font-size:11px">${c.statut}</span>
+        </div>
+      `).join('') || '<p class="empty-state">Aucune candidature</p>';
+    } catch (err) {
+      console.error('loadOverview:', err);
+    }
+  }
+
+  function showOffreForm() {
+    document.getElementById('offreForm').style.display = 'block';
+    document.getElementById('formOffre').reset();
+  }
+
+  function hideOffreForm() {
+    document.getElementById('offreForm').style.display = 'none';
+  }
+
+  async function submitOffre(e) {
+    e.preventDefault();
+    try {
+      const offre = {
+        titre: document.getElementById('offreTitre').value,
+        description: document.getElementById('offreDesc').value,
+        localisation: document.getElementById('offreLocalisation').value,
+        type_contrat: document.getElementById('offreType').value,
+        salaire_min: parseInt(document.getElementById('offreSalaireMin').value) || null,
+        salaire_max: parseInt(document.getElementById('offreSalaireMax').value) || null,
+      };
+      
+      await HH.api('/offres', { method: 'POST', body: JSON.stringify(offre) });
+      HH.Toast.success('Offre publiée !');
+      hideOffreForm();
+      loadOffres();
+      loadOverview();
+    } catch (err) {
+      HH.Toast.error(err.message);
+    }
+  }
+
+  async function loadOffres() {
+    try {
+      const data = await HH.api('/offres/mes');
+      const offres = data.offres || [];
+      document.getElementById('offresList').innerHTML = !offres.length
+        ? '<p class="empty-state">Aucune offre publiée.</p>'
+        : offres.map(o => `
+          <div class="card flex justify-between items-start mb-3">
+            <div style="flex:1">
+              <h3 class="font-medium">${o.titre}</h3>
+              <p class="text-sm text-muted">${o.localisation || 'Remote'} · ${o.type_contrat}</p>
+              <p class="text-xs mt-1">${o.nb_candidatures || 0} candidature${o.nb_candidatures > 1 ? 's' : ''}</p>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-danger btn-sm" onclick="deleteOffre('${o.id}')">Supprimer</button>
+            </div>
+          </div>
+        `).join('');
+    } catch (err) {
+      console.error('loadOffres:', err);
+    }
+  }
+
+  async function deleteOffre(id) {
+    if (!confirm('Supprimer cette offre ?')) return;
+    try {
+      await HH.api(`/offres/${id}`, { method: 'DELETE' });
+      HH.Toast.success('Offre supprimée.');
+      loadOffres();
+      loadOverview();
+    } catch (err) {
+      HH.Toast.error(err.message);
+    }
+  }
+
+  async function loadCandidatures() {
+    try {
+      const data = await HH.api('/candidatures/entreprise');
+      const candidatures = data.candidatures || [];
+      document.getElementById('candidaturesList').innerHTML = !candidatures.length
+        ? '<p class="empty-state">Aucune candidature reçue.</p>'
+        : candidatures.map(c => `
+          <div class="card mb-3">
+            <div class="flex justify-between items-start mb-2">
+              <div style="flex:1">
+                <h3 class="font-medium">${c.prenom} ${c.nom}</h3>
+                <p class="text-sm text-muted">${c.offre_titre} · ${c.titre_poste || 'N/A'}</p>
+              </div>
+              <span class="tag tag-blue" style="font-size:11px">${c.statut}</span>
+            </div>
+            <p class="text-xs" style="margin:8px 0">📧 ${c.email}</p>
+            ${c.lettre_motivation ? `<p class="text-xs italic text-muted">"${c.lettre_motivation.slice(0, 100)}..."</p>` : ''}
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-success btn-sm" onclick="updateCandidatureStatus('${c.id}', 'shortlistee')">Shortlister</button>
+              <button class="btn btn-primary btn-sm" onclick="showMessageForm('${c.candidat_id}', '${c.prenom}')">Envoyer message</button>
+            </div>
+          </div>
+        `).join('');
+    } catch (err) {
+      console.error('loadCandidatures:', err);
+      document.getElementById('candidaturesList').innerHTML = '<p class="empty-state">Erreur lors du chargement.</p>';
+    }
+  }
+
+  async function updateCandidatureStatus(candidatureId, newStatus) {
+    try {
+      await HH.api(`/candidatures/${candidatureId}`, { 
+        method: 'PATCH', 
+        body: JSON.stringify({ statut: newStatus }) 
+      });
+      HH.Toast.success('Statut mis à jour.');
+      loadCandidatures();
+    } catch (err) {
+      HH.Toast.error(err.message);
+    }
+  }
+
+  function showMessageForm(candidatId, candidatName) {
+    const msg = prompt(`Envoyer un message à ${candidatName}:`);
+    if (msg) {
+      HH.Toast.info('Message envoyé (en cours de développement)');
+    }
+  }
+
+  async function loadProfil() {
+    try {
+      const user = HH.auth.getUser();
+      document.getElementById('profilNom').value = user.nom || '';
+      document.getElementById('profilEmail').value = user.email || '';
+    } catch (err) {
+      console.error('loadProfil:', err);
+    }
+  }
+
+  async function submitProfil(e) {
+    e.preventDefault();
+    HH.Toast.success('Profil mis à jour. (Fonctionnalité en cours)');
+  }
+
+  function logout() {
+    HH.auth.clear();
+    window.location.href = 'index.html';
+  }
+
+  init();
+</script>
+</body>
+</html>

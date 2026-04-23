@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion — Chasse de tête</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="form-page">
+  <div class="form-card">
+    <div class="form-logo">
+      <a href="index.html" class="logo"><b>Chasseur de tête</b></a>
+    </div>
+
+    <h1 class="form-title">Connexion</h1>
+    <p class="form-sub">Accédez à votre espace</p>
+
+    <form id="loginForm">
+
+      <!-- EMAIL -->
+      <div class="form-group">
+        <label class="form-label" for="email">Adresse email ou numero Telephone</label>
+        <input class="form-input" id="email" type="email" placeholder="vous@exemple.com" autocomplete="email" />
+      </div>
+
+      <!-- PASSWORD (MODIFIÉ ICI ✅) -->
+      <div class="form-group">
+        <label class="form-label" for="password">Mot de passe</label>
+
+        <div style="position: relative;">
+          <input class="form-input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+          <!-- 👁️ ICI -->
+          <span id="eye" onclick="togglePassword()" 
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+            👁️
+          </span>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg form-btn" id="submitBtn">
+        Se connecter
+      </button>
+
+    </form>
+
+    <p class="form-link mt-4">
+      Pas encore de compte ? <a href="register.html">Créer un compte</a>
+    </p>
+
+    <p class="form-link mt-2 text-xs text-muted">
+      Test : <strong><b>liva@exemple.com</b></strong> / <strong>password123</strong>
+    </p>
+
+  </div>
+</div>
+
+<script src="main.js"></script>
+
+<script>
+  // Redirect si déjà connecté
+  if (HH.auth.isLogged()) {
+    const role = HH.auth.getUser()?.role;
+    const map = {
+      candidat: 'dashboard-candidat.html',
+      recruteur: 'dashboard-recruteur.html',
+      entreprise: 'dashboard-entreprise.html',
+      admin: 'dashboard-admin.html'
+    };
+    window.location.href = map[role] || 'index.html';
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    HH.clearErrors();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    let valid = true;
+
+    const emailErr = HH.validate.email(email);
+    if (emailErr) { HH.showError('email', emailErr); valid = false; }
+
+    const pwErr = HH.validate.minLen(password, 6);
+    if (pwErr) { HH.showError('password', pwErr); valid = false; }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Connexion…';
+
+    try {
+      const data = await HH.api('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, mot_de_passe: password }),
+      });
+
+      HH.auth.setSession(data);
+      HH.Toast.success(`Bienvenue, ${data.user.prenom} !`);
+
+      const map = {
+        candidat: 'dashboard-candidat.html',
+        recruteur: 'dashboard-recruteur.html',
+        entreprise: 'dashboard-entreprise.html',
+        admin: 'dashboard-admin.html'
+      };
+
+      setTimeout(() => window.location.href = map[data.user.role] || 'index.html', 500);
+
+    } catch (err) {
+      HH.Toast.error(err.message);
+      btn.disabled = false;
+      btn.textContent = 'Se connecter';
+    }
+  });
+
+  // ✅ FONCTION QUI MARCHE
+  function togglePassword() {
+    const password = document.getElementById("password");
+    const eye = document.getElementById("eye");
+
+    if (password.type === "password") {
+      password.type = "text";
+      eye.textContent = "🙈";
+    } else {
+      password.type = "password";
+      eye.textContent = "👁️";
+    }
+  }
+</script>
+
+</body>
+</html>

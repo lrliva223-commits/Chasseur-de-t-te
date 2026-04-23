@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plateforme de recrutement</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ════════ NAVBAR ════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo"><b><i> CHASSEUR DE TÊTE</i></b></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="offres.html"><b>Offres</b></a></li>
+        <li><a href="#comment-ca-marche"><b>Comment ça marche</b></a></li>
+        <li id="navAuth">
+          <a href="login.html" class="btn btn-outline"><b>Se connecter</b></a>
+          <a href="register.html" class="btn btn-primary"><b>S'inscrire</b></a>
+        </li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ════════ HERO ════════ -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        
+        <h1><i>Trouvez le</i>  <span class="accent"><i>talent parfait</i></span> <i>ou l'opportunité</i> <span class="accent">idéale</span></h1>
+        <p class="hero-sub"><b>Connectez candidats d'exception et entreprises ambitieuses pour des recrutements directs et efficaces.</b></p>
+        <div class="hero-cta">
+          <a href="register.html?role=candidat" class="btn btn-primary btn-lg">Je cherche un emploi</a>
+          <a href="register.html?role=entreprise" class="btn btn-outline btn-lg">Je suis une entreprise</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><span class="stat-num">1 200+</span><span class="stat-lbl"><b>Candidats</b></span></div>
+          <div class="stat"><span class="stat-num">340+</span><span class="stat-lbl"><b>Entreprises</b></span></div>
+          <div class="stat"><span class="stat-num">95%</span><span class="stat-lbl"><b>Taux de satisfaction</b></span></div>
+        </div>
+      </div>
+      
+    </div>
+  </section>
+
+  <!-- ════════ COMMENT ÇA MARCHE ════════ -->
+  <section class="section" id="comment-ca-marche">
+    <div class="container">
+      <h2 class="section-title">Comment ça marche ?</h2>
+      <p class="section-sub">Un processus simple en 3 étapes pour candidats et entreprises</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Créez votre profil</h3>
+          <p>Candidat ou entreprise — choisissez votre rôle et complétez votre profil en quelques minutes.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Connectez-vous</h3>
+          <p>Parcourez les offres ou trouvez des talents. Notre messagerie intégrée facilite les échanges.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Recrutez ou postulez</h3>
+          <p>Suivez vos candidatures ou gérez votre pipeline de recrutement en temps réel.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ ENTREPRISES INSCRITES ════════ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Découvrez les entreprises qui recrutent</h2>
+        <a href="offres.html" class="btn btn-outline">Voir toutes les offres →</a>
+      </div>
+      <div class="companies-grid" id="companiesGrid">
+        <p class="empty-state">Chargement…</p>
+      </div>
+      <p class="text-sm text-muted" style="margin-top:16px">Les candidats doivent créer un compte pour postuler aux offres.</p>
+    </div>
+  </section>
+
+  <!-- ════════ OFFRES RÉCENTES ════════ -->
+  <section class="section bg-gray">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Offres récentes</h2>
+        <a href="offres.html" class="btn btn-outline">Voir toutes →</a>
+      </div>
+      <div class="offres-grid" id="offresGrid">
+        <div class="offre-card">
+          <div class="offre-top">
+            <div>
+              <h3 class="offre-titre">Développeur Frontend React Senior</h3>
+              <p class="offre-meta">Accenture · Paris · CDI</p>
+            </div>
+            <span class="tag tag-blue">Nouveau</span>
+          </div>
+          <p class="offre-desc">Rejoignez notre équipe produit pour développer des interfaces modernes avec React et TypeScript.</p>
+          <div class="offre-footer">
+            <span class="salary">600000–1000000MGA</span>
+            <a href="login.html" class="btn btn-primary btn-sm">Postuler</a>
+          </div>
+        </div>
+        <div class="offre-card">
+          <div class="offre-top">
+            <div>
+              <h3 class="offre-titre">Product Manager Digital</h3>
+              <p class="offre-meta">BNP Paribas · Paris · CDI</p>
+            </div>
+          </div>
+          <p class="offre-desc">Pilotez le développement de nos produits digitaux B2C en méthode agile avec des équipes pluridisciplinaires.</p>
+          <div class="offre-footer">
+            <span class="salary">600000–1000000MGA</span>
+            <a href="login.html" class="btn btn-primary btn-sm">Postuler</a>
+          </div>
+        </div>
+        <div class="offre-card">
+          <div class="offre-top">
+            <div>
+              <h3 class="offre-titre">UX Lead Designer</h3>
+              <p class="offre-meta">Capgemini · Lyon · CDI</p>
+            </div>
+          </div>
+          <p class="offre-desc">Définissez la vision UX de nos produits et encadrez une équipe de 4 designers.</p>
+          <div class="offre-footer">
+            <span class="salary">300000–650000MAG</span>
+            <a href="login.html" class="btn btn-primary btn-sm">Postuler</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ FOOTER ════════ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo">Chasseur de tete</span>
+        <p>La plateforme de recrutement qui connecte talents et entreprises.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h4>Candidats</h4>
+          <a href="offres.html">Offres d'emploi</a>
+          <a href="register.html?role=candidat">Créer un compte</a>
+        </div>
+        <div>
+          <h4>Entreprises</h4>
+          <a href="register.html?role=entreprise">Créer un compte entreprise</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Chasseur de tete. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+  <script>
+    async function loadCompanies() {
+      const grid = document.getElementById('companiesGrid');
+      if (!grid) return;
+      grid.innerHTML = '<p class="empty-state">Chargement…</p>';
+      try {
+        const data = await HH.api('/entreprises/populaires');
+        const companies = data.entreprises || [];
+        if (!companies.length) {
+          grid.innerHTML = '<p class="empty-state">Aucune entreprise visible pour le moment.</p>';
+          return;
+        }
+        grid.innerHTML = companies.map(company => `
+          <a href="offres.html?entreprise_id=${company.id}" class="company-card-link">
+            <div class="company-card">
+              <div class="company-logo">
+                ${company.logo_url ? `<img src="${company.logo_url}" alt="Logo ${company.nom}" />` : `<span>${(company.nom || '??').slice(0,2).toUpperCase()}</span>`}
+              </div>
+              <div class="company-info">
+                <h3>${company.nom || 'Entreprise'}</h3>
+                <p>${company.secteur || 'Secteur non précisé'}</p>
+              </div>
+              <span class="tag tag-green">${company.offres_disponibles || 0} poste${company.offres_disponibles > 1 ? 's' : ''}</span>
+            </div>
+          </a>
+        `).join('');
+      } catch (err) {
+        grid.innerHTML = '<p class="empty-state">Impossible de charger les entreprises.</p>';
+      }
+    }
+    loadCompanies();
+  </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon profil — Chasseur de tête</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo"><b><i>Chasseur de tête</i></b></a>
+    <ul class="nav-links" id="navLinks">
+      <li id="navAuth"></li>
+    </ul>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-logo">Mon espace</div>
+    <nav class="sidebar-nav">
+      <a href="dashboard-candidat.html">Tableau de bord</a>
+      <a href="offres.html">Offres d'emploi</a>
+      <a href="messagerie.html">Messagerie</a>
+      <a href="profil.html" class="active">Mon profil</a>
+      <a href="#" onclick="logout()">Déconnexion</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <h1 class="page-title">Mon profil</h1>
+
+    <div class="grid-2" style="align-items:start">
+      <!-- Formulaire -->
+      <div class="card">
+        <h2 class="card-title">Informations professionnelles</h2>
+        <form id="profilForm">
+          <div class="form-group">
+            <label class="form-label">Titre du poste recherché</label>
+            <input class="form-input" id="titre_poste" type="text" placeholder="ex : Développeur Frontend React Senior" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Résumé professionnel</label>
+            <textarea class="form-input" id="resume" rows="5" placeholder="Présentez votre parcours…"></textarea>
+          </div>
+          <div class="grid-2" style="gap:12px">
+            <div class="form-group">
+              <label class="form-label">Disponibilité</label>
+              <select class="form-input" id="disponibilite">
+                <option value="">Sélectionner</option>
+                <option>Immédiate</option>
+                <option>1 mois</option>
+                <option>2 mois</option>
+                <option>3 mois et +</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Salaire min. souhaité (k€)</label>
+              <input class="form-input" id="salaire_min" type="number" placeholder="ex : 45" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="saveBtn">Enregistrer</button>
+        </form>
+      </div>
+
+      <!-- CV upload -->
+      <div>
+        <div class="card mb-4">
+          <h2 class="card-title">Mon CV</h2>
+          <div id="cvStatus" class="mb-3 text-sm text-muted">Aucun CV uploadé</div>
+          <label class="form-group" style="cursor:pointer">
+            <div id="uploadZone" style="border:2px dashed var(--gray-200);border-radius:8px;padding:24px;text-align:center;transition:border-color .15s">
+              <p class="text-sm text-muted">Cliquer pour uploader votre CV</p>
+              <p class="text-xs text-muted mt-2">PDF, DOC, DOCX · max 5 Mo</p>
+            </div>
+            <input type="file" id="cvFile" accept=".pdf,.doc,.docx" style="display:none" onchange="uploadCV(this)" />
+          </label>
+        </div>
+
+        <!-- Infos compte -->
+        <div class="card">
+          <h2 class="card-title">Informations du compte</h2>
+          <div id="accountInfo" class="text-sm text-muted">Chargement…</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+HH.requireAuth('candidat');
+
+// Charger le profil
+async function loadProfil() {
+  try {
+    const user = HH.auth.getUser();
+    document.getElementById('accountInfo').innerHTML = `
+      <div class="flex items-center gap-3 mb-3">
+        <div class="avatar avatar-lg">${(user?.prenom?.[0]||'') + (user?.nom?.[0]||'')}</div>
+        <div>
+          <p class="font-medium">${user?.prenom} ${user?.nom}</p>
+          <p class="text-muted text-xs">${user?.email}</p>
+        </div>
+      </div>
+      <p class="text-xs text-muted">Rôle : ${user?.role}</p>
+    `;
+
+    const data = await HH.api('/candidats/profil');
+    const p    = data.profil;
+    if (p) {
+      document.getElementById('titre_poste').value    = p.titre_poste    || '';
+      document.getElementById('resume').value         = p.resume         || '';
+      document.getElementById('disponibilite').value  = p.disponibilite  || '';
+      document.getElementById('salaire_min').value    = p.salaire_min    || '';
+      if (p.cv_url) {
+        document.getElementById('cvStatus').innerHTML = `<a href="${p.cv_url}" target="_blank" class="btn btn-outline btn-sm">Voir mon CV actuel →</a>`;
+      }
+    }
+  } catch (err) { HH.Toast.error('Impossible de charger le profil.'); }
+}
+
+// Sauvegarder
+document.getElementById('profilForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  try {
+    await HH.api('/candidats/profil', {
+      method: 'PUT',
+      body: JSON.stringify({
+        titre_poste:   document.getElementById('titre_poste').value,
+        resume:        document.getElementById('resume').value,
+        disponibilite: document.getElementById('disponibilite').value,
+        salaire_min:   parseInt(document.getElementById('salaire_min').value) || null,
+      }),
+    });
+    HH.Toast.success('Profil mis à jour !');
+  } catch (err) { HH.Toast.error(err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+});
+
+// Upload CV
+async function uploadCV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { HH.Toast.error('Fichier trop volumineux (max 5 Mo).'); return; }
+  const formData = new FormData();
+  formData.append('cv', file);
+  const zone = document.getElementById('uploadZone');
+  zone.innerHTML = '<p class="text-sm text-muted">Upload en cours…</p>';
+  try {
+    const token = HH.auth.getToken();
+    const res   = await fetch('http://localhost:5000/api/v1/candidats/upload-cv', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    document.getElementById('cvStatus').innerHTML = `<a href="${data.cv_url}" target="_blank" class="btn btn-outline btn-sm">Voir mon CV →</a>`;
+    zone.innerHTML = '<p class="text-sm" style="color:var(--green-700)">CV uploadé avec succès ✓</p>';
+    HH.Toast.success('CV uploadé !');
+  } catch (err) {
+    HH.Toast.error(err.message || 'Erreur upload.');
+    zone.innerHTML = '<p class="text-sm text-muted">Cliquer pour uploader votre CV</p><p class="text-xs text-muted mt-2">PDF, DOC, DOCX · max 5 Mo</p>';
+  }
+}
+
+// Hover zone upload
+document.getElementById('uploadZone')?.addEventListener('dragover', e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--blue-400)'; });
+document.getElementById('uploadZone')?.addEventListener('dragleave', e => { e.currentTarget.style.borderColor = 'var(--gray-200)'; });
+document.getElementById('uploadZone')?.addEventListener('drop', e => {
+  e.preventDefault(); e.currentTarget.style.borderColor = 'var(--gray-200)';
+  const file = e.dataTransfer.files[0];
+  if (file) { document.getElementById('cvFile').files = e.dataTransfer.files; uploadCV(document.getElementById('cvFile')); }
+});
+
+loadProfil();
+</script>
+</body>
+</html>
