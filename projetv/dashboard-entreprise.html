@@ -481,7 +481,7 @@
 
     async function updateStatus(id, status, candidatId) {
       try {
-        await HH.api(`/candidatures/${id}`, { method: 'PATCH', body: JSON.stringify({ statut: status }) });
+        await HH.api(`/candidatures/${id}/statut`, { method: 'PATCH', body: JSON.stringify({ statut: status }) });
         
         if (status === 'acceptee' && candidatId) {
           try {
