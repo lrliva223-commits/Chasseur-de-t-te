@@ -202,17 +202,6 @@
       </div>
     </div>
 
-    <!-- MESSAGES -->
-    <div id="tab-messages" style="display:none;">
-      <div class="admin-card">
-        <div class="admin-table-header">
-          <h2>Conversations avec les candidats</h2>
-        </div>
-        <div id="conversationsList">
-          <p class="empty-state">Chargement des messages…</p>
-        </div>
-      </div>
-    </div>
 
     <!-- PROFIL -->
     <div id="tab-profil" style="display:none">
@@ -476,8 +465,9 @@
                       </div>
                     </td>
                     <td>
-                      <div class="flex gap-2">
-                        <button class="btn btn-success btn-sm" onclick="updateStatus('${c.id}', 'shortlistee')">Retenir</button>
+                      <div class="flex gap-2 flex-wrap">
+                        <button class="btn btn-success btn-sm" onclick="updateStatus('${c.id}', 'acceptee', '${c.candidat_id}')">Accepter</button>
+                        <button class="btn btn-danger btn-sm" onclick="updateStatus('${c.id}', 'refusee', '${c.candidat_id}')">Refuser</button>
                         <button class="btn btn-outline btn-sm" onclick="openMessageModal('${c.candidat_id}', '${c.prenom} ${c.nom}')">Message</button>
                       </div>
                     </td>
@@ -489,9 +479,19 @@
       } catch (err) { console.error(err); }
     }
 
-    async function updateStatus(id, status) {
+    async function updateStatus(id, status, candidatId) {
       try {
         await HH.api(`/candidatures/${id}`, { method: 'PATCH', body: JSON.stringify({ statut: status }) });
+        
+        if (status === 'acceptee' && candidatId) {
+          try {
+            await HH.api('/messages', {
+              method: 'POST',
+              body: JSON.stringify({ destinataire_id: candidatId, contenu: "Vous êtes accepté(e) mais nous vous appelons pour l'entretien." })
+            });
+          } catch(e) { console.error('Erreur envoi message auto', e); }
+        }
+        
         HH.Toast.success('Statut mis à jour.'); loadCandidatures();
       } catch (err) { HH.Toast.error(err.message); }
     }
@@ -552,12 +552,16 @@
       }
     }
 
+    let currentChatConv = null;
+    let chatPollInterval = null;
+
     async function loadMessages() {
       const list = document.getElementById('conversationsList');
       const badge = document.getElementById('unreadMessagesBadge');
       try {
         const data = await HH.api('/messages/conversations');
-        const convs = (data.conversations || []).filter(c => !!c.i_started);
+        // On entreprise dashboard, we show all conversations
+        const convs = data.conversations || [];
 
         const totalUnread = convs.reduce((sum, c) => sum + (c.non_lu || 0), 0);
         if (totalUnread > 0) {
@@ -567,34 +571,96 @@
         }
 
         if (!convs.length) {
-          list.innerHTML = '<p class="empty-state">Aucune conversation initiée.</p>';
+          list.innerHTML = '<p class="empty-state">Aucune conversation.</p>';
           return;
         }
 
-        list.innerHTML = `
-          <div class="conversations-grid">
-            ${convs.map(c => `
-              <div class="conversation-item" onclick="openMessageModal('${c.id}', '${c.prenom} ${c.nom}')">
-                <div class="conv-avatar">
-                  ${(c.prenom?.[0] || '')}${(c.nom?.[0] || '')}
+        window.entrepriseConvsMap = {};
+        list.innerHTML = convs.map(c => {
+          window.entrepriseConvsMap[c.id] = c;
+          return `
+            <div class="conversation-item ${currentChatConv?.id === c.id ? 'active' : ''}" onclick="openChat('${c.id}')" style="cursor:pointer; display:flex; gap:12px; padding:12px; border-bottom:1px solid var(--gray-100);">
+              <div class="conv-avatar" style="width:40px;height:40px;background:var(--blue-100);color:var(--blue-600);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">
+                ${(c.prenom?.[0] || '')}${(c.nom?.[0] || '')}
+              </div>
+              <div class="conv-info" style="flex:1;min-width:0;">
+                <div class="conv-header" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+                  <span class="conv-name" style="font-weight:600;font-size:14px;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.prenom} ${c.nom}</span>
+                  <span class="conv-date" style="font-size:11px;color:var(--gray-400);flex-shrink:0;">${HH.formatDate(c.date_envoi)}</span>
                 </div>
-                <div class="conv-info">
-                  <div class="conv-header">
-                    <span class="conv-name">${c.prenom} ${c.nom}</span>
-                    <span class="conv-date">${HH.formatDate(c.date_envoi)}</span>
-                  </div>
-                  <div class="conv-last">
-                    <span class="last-text">${c.dernier_message}</span>
-                    ${c.non_lu > 0 ? `<span class="unread-badge">${c.non_lu}</span>` : ''}
-                  </div>
+                <div class="conv-last" style="display:flex;justify-content:space-between;align-items:center;">
+                  <span class="last-text" style="font-size:13px;color:var(--gray-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${c.dernier_message || '—'}</span>
+                  ${c.non_lu > 0 ? `<span class="unread-badge" style="background:var(--red-500);color:white;font-size:11px;padding:2px 6px;border-radius:10px;margin-left:8px;">${c.non_lu}</span>` : ''}
                 </div>
               </div>
-            `).join('')}
-          </div>
-        `;
+            </div>
+          `;
+        }).join('');
       } catch (err) {
         list.innerHTML = '<p class="empty-state">Erreur de chargement.</p>';
       }
+    }
+
+    async function openChat(convId) {
+      const conv = window.entrepriseConvsMap[convId];
+      if (!conv) return;
+      currentChatConv = conv;
+
+      document.getElementById('chatDefault').style.display = 'none';
+      document.getElementById('chatActive').style.display = 'flex';
+      document.getElementById('activeChatName').textContent = `${conv.prenom} ${conv.nom}`;
+      document.getElementById('activeChatAvatar').textContent = `${(conv.prenom?.[0] || '')}${(conv.nom?.[0] || '')}`;
+
+      clearInterval(chatPollInterval);
+      await fetchChatMessages();
+      chatPollInterval = setInterval(fetchChatMessages, 4000);
+      loadMessages(); // Rafraîchir la liste pour mettre en surbrillance l'active
+    }
+
+    async function fetchChatMessages() {
+      if (!currentChatConv) return;
+      try {
+        const data = await HH.api(`/messages/conversation/${currentChatConv.id}`);
+        const msgs = data.messages || [];
+        const el = document.getElementById('chatMessages');
+        const me = HH.auth.getUser();
+
+        el.innerHTML = msgs.map(m => {
+          const mine = m.expediteur_id === me?.id;
+          return `
+            <div class="msg-row ${mine ? 'mine' : ''}" style="display:flex;flex-direction:column;align-items:${mine ? 'flex-end' : 'flex-start'};margin-bottom:16px;">
+              <div>
+                <div class="msg-bubble ${mine ? 'mine' : 'theirs'}" style="padding:10px 14px;border-radius:12px;font-size:14px;background:${mine ? 'var(--blue-600)' : 'var(--gray-100)'};color:${mine ? 'white' : 'var(--gray-800)'};">${escapeHtml(m.contenu)}</div>
+                <p class="msg-time ${mine ? 'mine' : ''}" style="font-size:11px;color:var(--gray-400);margin-top:4px;text-align:${mine ? 'right' : 'left'}">${HH.formatDate(m.date_envoi)}</p>
+              </div>
+            </div>
+          `;
+        }).join('') || '<p style="text-align:center;color:var(--gray-400);font-size:13px;padding:24px;">Commencez la conversation</p>';
+
+        el.scrollTop = el.scrollHeight;
+      } catch (err) { console.error('Erreur chargement messages', err); }
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const contenu = input.value.trim();
+      if (!contenu || !currentChatConv) return;
+      input.value = '';
+
+      try {
+        await HH.api('/messages', {
+          method: 'POST',
+          body: JSON.stringify({ destinataire_id: currentChatConv.id, contenu })
+        });
+        await fetchChatMessages();
+        await loadMessages();
+      } catch (err) {
+        HH.Toast.error(err.message);
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     // Using global logout() from main.js

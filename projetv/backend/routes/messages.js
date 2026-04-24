@@ -11,7 +11,10 @@ router.get('/conversations', async (req, res) => {
     const userId = req.user.id;
     // Query to get all interlocutors and their last message
     const [rows] = await pool.execute(
-      `SELECT u.id, u.prenom, u.nom, u.role,
+      `SELECT u.id, 
+              CASE WHEN u.role = 'entreprise' THEN COALESCE(e.nom, u.prenom) ELSE u.prenom END AS prenom,
+              CASE WHEN u.role = 'entreprise' THEN '' ELSE u.nom END AS nom,
+              u.role,
               m.contenu AS dernier_message,
               m.date_envoi,
               (SELECT COUNT(*) FROM messages 
@@ -21,6 +24,7 @@ router.get('/conversations', async (req, res) => {
                   OR (expediteur_id = ? AND destinataire_id = u.id)
                ORDER BY date_envoi ASC LIMIT 1) = ? AS i_started
        FROM utilisateurs u
+       LEFT JOIN entreprises e ON e.utilisateur_id = u.id
        JOIN messages m ON m.id = (
          SELECT id FROM messages
          WHERE (expediteur_id = u.id AND destinataire_id = ?)

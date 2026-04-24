@@ -275,6 +275,13 @@ async function submitApplication(e, offre_id, btn) {
   }
 }
 
+function closeApplicationModal(offre_id) {
+  const modal = document.getElementById('applicationModal_' + offre_id);
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
 function isNew(date) { return Date.now() - new Date(date).getTime() < 86400000 * 3; }
 function truncate(str, n) { return str?.length > n ? str.slice(0, n) + '…' : (str || ''); }
 
