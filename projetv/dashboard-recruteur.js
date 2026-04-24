@@ -104,7 +104,7 @@ function renderKanban(candidatures) {
           <div class="kanban-card" draggable="true" data-id="${c.id}"
                ondragstart="dragStart(event, '${c.id}')">
             <p class="k-name">${c.prenom} ${c.nom}</p>
-            <p class="k-sub">${c.titre_poste || '—'}${c.salaire_min ? ' · ' + c.salaire_min + 'k€' : ''}</p>
+            <p class="k-sub">${c.titre_poste || '—'}${c.salaire_min ? ' · ' + c.salaire_min + 'MGA' : ''}</p>
             <div class="flex items-center justify-between mt-3">
               <div class="flex gap-2">
                 ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="tag tag-blue" style="text-decoration:none">CV</a>` : ''}

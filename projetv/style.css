@@ -679,6 +679,56 @@ tbody tr:last-child td { border-bottom: none; }
   transform: translateX(0);
 }
 
+/* ─── Enterprise Dashboard ──────────── */
+.dashboard-entreprise {
+  background: #f8fafc;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar-entreprise {
+  background: #ffffff;
+  color: #1f2937;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  border-right: 1px solid #f1f5f9;
+  z-index: 10;
+}
+
+.sidebar-entreprise .nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-entreprise .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.sidebar-entreprise .nav-item:hover {
+  background: #f1f5f9;
+  color: #111827;
+}
+
+.sidebar-entreprise .nav-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-right: 3px solid #2563eb;
+}
+
+
 /* ─── Candidate Dashboard ───────────── */
 .dashboard-candidate {
   background: #fdfefe;
@@ -706,19 +756,34 @@ tbody tr:last-child td { border-bottom: none; }
   z-index: 10;
 }
 
-.sidebar-candidate .nav-item.active {
-  background: #f0fdf4;
-  color: #10b981;
-  border-right: 3px solid #10b981;
+.sidebar-candidate .nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .sidebar-candidate .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
   color: #6b7280;
+  text-decoration: none;
 }
 
 .sidebar-candidate .nav-item:hover {
   background: #f9fafb;
   color: #111827;
+}
+
+.sidebar-candidate .nav-item.active {
+  background: #f0fdf4;
+  color: #10b981;
+  border-right: 3px solid #10b981;
 }
 
 .action-card {

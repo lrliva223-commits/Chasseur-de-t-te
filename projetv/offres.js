@@ -90,7 +90,7 @@ async function loadOffres(page = 1, filters = {}) {
         <p class="job-card-desc">${truncate(o.description, 200)}</p>
         <div class="job-card-footer">
           <div class="job-card-salary">
-            ${o.salaire_min ? o.salaire_min + (o.salaire_max ? ' – ' + o.salaire_max : '+') + ' k€ / an' : 'Salaire non précisé'}
+            ${o.salaire_min ? o.salaire_min + (o.salaire_max ? ' – ' + o.salaire_max : '+') + ' MGA / an' : 'Salaire non précisé'}
           </div>
           <div style="display:flex;gap:12px;align-items:center">
             <span class="text-xs text-muted">Publiée ${HH.formatDate(o.date_publication)}</span>
@@ -289,46 +289,80 @@ function truncate(str, n) { return str?.length > n ? str.slice(0, n) + '…' : (
 function getFilters() {
   return {
     search:       document.getElementById('searchInput').value || undefined,
+    skills:       document.getElementById('skillsInput').value || undefined,
     localisation: document.getElementById('locInput').value    || undefined,
     type_contrat: document.getElementById('typeInput').value   || undefined,
     salaire_min:  document.getElementById('salInput').value    || undefined,
   };
 }
 
-document.getElementById('filterBtn').addEventListener('click', () => {
+function lancerRecherche() {
   const userFilters = getFilters();
   const urlFilters = getUrlFilters();
-  currentFilters = { ...userFilters, ...urlFilters };
-  loadOffres(1, currentFilters);
-});
+  const allFilters = { ...userFilters, ...urlFilters };
+
+  // Nettoyage des filtres pour ne pas envoyer de valeurs vides à l'API
+  const cleanFilters = {};
+  Object.keys(allFilters).forEach(key => {
+    const val = allFilters[key];
+    if (val !== undefined && val !== '' && val !== null) {
+      cleanFilters[key] = val;
+    }
+  });
+
+  loadOffres(1, cleanFilters);
+}
+
+document.getElementById('filterBtn').addEventListener('click', lancerRecherche);
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-  ['searchInput','locInput','typeInput','salInput'].forEach(id => { const el = document.getElementById(id); el.value = ''; });
+  ['searchInput','skillsInput','locInput','typeInput','salInput'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.type === ''));
   const urlFilters = getUrlFilters();
   currentFilters = urlFilters;
   loadOffres(1, urlFilters);
 });
 
-document.getElementById('searchInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { 
-    const userFilters = getFilters();
-    const urlFilters = getUrlFilters();
-    currentFilters = { ...userFilters, ...urlFilters };
-    loadOffres(1, currentFilters); 
-  }
+let rechercheTimer;
+['searchInput', 'skillsInput', 'locInput', 'salInput'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  
+  // Recherche instantanée pendant la saisie (debounce 500ms)
+  el.addEventListener('input', () => {
+    clearTimeout(rechercheTimer);
+    rechercheTimer = setTimeout(lancerRecherche, 500);
+  });
+
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      clearTimeout(rechercheTimer);
+      lancerRecherche();
+    }
+  });
 });
 
+// Synchronisation Pill -> Dropdown
 document.getElementById('typePills').addEventListener('click', (e) => {
   const pill = e.target.closest('.pill');
   if (!pill) return;
+  
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
   pill.classList.add('active');
-  document.getElementById('typeInput').value = pill.dataset.type;
-  const userFilters = getFilters();
-  const urlFilters = getUrlFilters();
-  currentFilters = { ...userFilters, ...urlFilters };
-  loadOffres(1, currentFilters);
+  
+  const typeValue = pill.dataset.type;
+  document.getElementById('typeInput').value = typeValue;
+  
+  lancerRecherche();
+});
+
+// Synchronisation Dropdown -> Pill
+document.getElementById('typeInput').addEventListener('change', (e) => {
+  const selectedType = e.target.value;
+  document.querySelectorAll('.pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.type === selectedType);
+  });
+  lancerRecherche();
 });
 
 // Init
